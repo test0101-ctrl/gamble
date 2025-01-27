@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cassino - Login e Registro</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: radial-gradient(circle, #2a2a72, #009ffd);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .tab button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 10px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab button.active {
+            border-bottom: 2px solid #f39c12;
+        }
+
+        .form {
+            display: none;
+        }
+
+        .form.active {
+            display: block;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+            font-size: 1rem;
+        }
+
+        button.submit {
+            width: 100%;
+            background: #f39c12;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+        }
+
+        .casino-theme {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #f39c12;
+        }
+
+        .casino-theme a {
+            color: #ffcc29;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cassino Online</h1>
+        <div class="tab">
+            <button id="login-tab" class="active" onclick="showForm('login')">Login</button>
+            <button id="register-tab" onclick="showForm('register')">Register</button>
+        </div>
+        
+        <form id="login" class="form active">
+            <input type="text" placeholder="Username" required>
+            <input type="password" placeholder="Password" required>
+            <button class="submit">Entrar</button>
+        </form>
+
+        <form id="register" class="form">
+            <input type="text" placeholder="Username" required>
+            <input type="email" placeholder="Email" required>
+            <input type="password" placeholder="Password" required>
+            <button class="submit">Registrar</button>
+        </form>
+
+        <p class="casino-theme">Jogue blackjack e roleta ao vivo! <a href="#">Saiba mais</a>.</p>
+    </div>
+
+    <script>
+        function showForm(form) {
+            document.querySelectorAll('.form').forEach(f => f.classList.remove('active'));
+            document.querySelectorAll('.tab button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(form).classList.add('active');
+            document.getElementById(`${form}-tab`).classList.add('active');
+        }
+    </script>
+</body>
+</html>
