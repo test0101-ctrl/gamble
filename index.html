@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High Card Showdown! (Enhanced)</title>
+    <title>Attribute Showdown!</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -24,32 +24,29 @@
             border-radius: 1.5rem; /* More rounded corners */
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             padding: 2.5rem;
-            max-width: 900px;
+            max-width: 1000px; /* Wider for more elements */
             width: 95%;
             text-align: center;
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: 1.5rem;
             position: relative;
             z-index: 10;
         }
 
+        /* Card Styling */
         .card {
-            width: 100px;
-            height: 150px;
+            width: 120px; /* Slightly wider cards */
+            height: 180px; /* Slightly taller cards */
             background-color: #e0e0e0;
             border: 2px solid #333;
-            border-radius: 0.75rem; /* Slightly less rounded than container */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #333;
+            border-radius: 0.75rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.6s ease-out; /* For flip animation */
+            cursor: pointer; /* Indicate clickable */
+            user-select: none; /* Prevent text selection */
         }
 
         .card-back {
@@ -71,42 +68,101 @@
             border-radius: inherit;
             background-color: #fff;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: space-between; /* Distribute content */
             align-items: center;
-            font-size: 3rem;
-            font-weight: bold;
-            color: #333;
+            padding: 10px;
+            box-sizing: border-box; /* Include padding in width/height */
             backface-visibility: hidden;
             transform: rotateY(180deg);
             z-index: 1;
+            font-size: 0.9rem;
+            color: #333;
         }
 
-        /* Animation for card flip */
+        .card-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .card-img-placeholder {
+            width: 80px;
+            height: 80px;
+            background-color: #bdc3c7;
+            border-radius: 0.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #444;
+            margin-bottom: 5px;
+            overflow: hidden; /* Ensure image fits */
+        }
+
+        .card-img-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-attributes {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 0.85rem;
+        }
+
+        .attribute-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 5px;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .attribute-label {
+            color: #34495e;
+        }
+        .attribute-value {
+            color: #2980b9;
+        }
+
+        /* Card States and Animations */
         .card.flipped {
             transform: rotateY(180deg);
         }
 
-        /* Animation for drawing cards */
-        @keyframes draw-card-player {
-            0% { transform: translate(-150%, 0) rotateY(0deg); opacity: 0; }
-            100% { transform: translate(0, 0) rotateY(0deg); opacity: 1; }
+        .card.selected {
+            outline: 3px solid #f39c12; /* Orange highlight for selected card */
+            transform: translateY(-10px) scale(1.05); /* Lift up slightly */
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
         }
 
-        @keyframes draw-card-opponent {
-            0% { transform: translate(150%, 0) rotateY(0deg); opacity: 0; }
-            100% { transform: translate(0, 0) rotateY(0deg); opacity: 1; }
+        /* Animation for playing cards to center */
+        @keyframes play-card-player {
+            0% { transform: translateY(100px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
         }
 
-        #player-card, #opponent-card {
-            animation: none; /* Reset to prevent initial animation */
+        @keyframes play-card-opponent {
+            0% { transform: translateY(-100px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
         }
 
-        #player-card.animate-draw {
-            animation: draw-card-player 0.5s ease-out forwards;
+        #player-played-card, #opponent-played-card {
+            animation: none; /* Reset */
         }
 
-        #opponent-card.animate-draw {
-            animation: draw-card-opponent 0.5s ease-out forwards;
+        #player-played-card.animate-play {
+            animation: play-card-player 0.4s ease-out forwards;
+        }
+
+        #opponent-played-card.animate-play {
+            animation: play-card-opponent 0.4s ease-out forwards;
         }
 
         /* Winning card animation */
@@ -116,8 +172,73 @@
         }
 
         .card.winner {
-            animation: bounce-winner 0.4s ease-out; /* Slightly faster bounce for immediate feedback */
+            animation: bounce-winner 0.4s ease-out;
             box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.7); /* Gold glow */
+        }
+
+        /* Hands and Play Area */
+        .player-hand-container, .opponent-hand-container {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap; /* Allow cards to wrap */
+            min-height: 190px; /* Ensure space even with few cards */
+        }
+
+        .player-hand-container .card {
+            transition: transform 0.2s ease-out, outline 0.2s ease-out, box-shadow 0.2s ease-out;
+        }
+
+        .player-hand-container .card:hover:not(.selected) {
+            transform: translateY(-5px) scale(1.02);
+        }
+
+        .play-area {
+            display: flex;
+            justify-center gap: 3rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            min-height: 180px; /* To prevent layout shift */
+        }
+
+        .played-card-slot {
+            width: 120px;
+            height: 180px;
+            border: 2px dashed #ccc;
+            border-radius: 0.75rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #aaa;
+            font-style: italic;
+        }
+
+        /* Attribute Buttons */
+        .attribute-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .attribute-button {
+            background-color: #3498db;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            border: none;
+        }
+
+        .attribute-button:hover:not(:disabled) {
+            background-color: #2980b9;
+        }
+
+        .attribute-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
 
         /* Button styling */
@@ -155,41 +276,45 @@
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .game-container {
-                padding: 1.5rem;
-                gap: 1.5rem;
+                padding: 1rem;
+                gap: 1rem;
             }
             .card {
-                width: 80px;
-                height: 120px;
-                font-size: 2rem;
+                width: 90px;
+                height: 135px;
+                font-size: 0.75rem;
             }
-            .card-front {
-                font-size: 2.5rem;
+            .card-name {
+                font-size: 1rem;
             }
-            .player-area, .opponent-area {
-                flex-direction: column;
-                align-items: center;
-                gap: 0.5rem;
+            .card-img-placeholder {
+                width: 60px;
+                height: 60px;
+            }
+            .attribute-button {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.9rem;
             }
             .play-area {
-                flex-direction: column;
+                gap: 1rem;
+            }
+            .played-card-slot {
+                width: 90px;
+                height: 135px;
             }
         }
 
         @media (max-width: 480px) {
-            .game-container {
-                padding: 1rem;
-            }
             .card {
-                width: 70px;
-                height: 100px;
-                font-size: 1.8rem;
+                width: 80px;
+                height: 120px;
             }
-            .card-front {
-                font-size: 2rem;
+            .card-img-placeholder {
+                width: 50px;
+                height: 50px;
             }
             .game-button {
-                padding: 0.6rem 1.5rem;
+                padding: 0.6rem 1.2rem;
                 font-size: 1rem;
             }
         }
@@ -197,302 +322,176 @@
 </head>
 <body class="antialiased">
     <div class="game-container">
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">High Card Showdown!</h1>
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">Attribute Showdown!</h1>
 
         <div class="flex justify-between items-center w-full">
             <div class="flex flex-col items-start opponent-area">
-                <h2 class="text-xl md:text-2xl font-semibold text-gray-700">Opponent</h2>
-                <div class="text-3xl md:text-4xl font-bold text-blue-600" id="opponent-score">0</div>
+                <h2 class="text-xl md:text-2xl font-semibold text-gray-700">Opponent Cards: <span id="opponent-card-count">0</span></h2>
             </div>
 
             <div class="flex flex-col items-end player-area">
-                <h2 class="text-xl md:text-2xl font-semibold text-gray-700">You</h2>
-                <div class="text-3xl md:text-4xl font-bold text-green-600" id="player-score">0</div>
+                <h2 class="text-xl md:text-2xl font-semibold text-gray-700">Your Cards: <span id="player-card-count">0</span></h2>
             </div>
         </div>
 
         <div class="text-md font-medium text-gray-600" id="overall-record">Wins: 0 | Losses: 0</div>
 
-        <div class="flex justify-around items-center w-full my-8 play-area">
-            <div id="opponent-card" class="card">
-                <div class="card-back"></div>
-                <div class="card-front" id="opponent-card-value"></div>
+        <div class="opponent-hand-container">
+            <div id="opponent-hand-placeholder" class="flex gap-2">
+                </div>
+        </div>
+
+        <div class="play-area">
+            <div id="opponent-played-card" class="played-card-slot">
+                Opponent Card
             </div>
-            <div id="player-card" class="card">
-                <div class="card-back"></div>
-                <div class="card-front" id="player-card-value"></div>
+            <div id="player-played-card" class="played-card-slot">
+                Your Card
             </div>
         </div>
 
-        <div class="text-2xl md:text-3xl font-semibold text-gray-800 my-4" id="game-message">Press "Draw Card" to start!</div>
+        <div class="text-xl md:text-2xl font-semibold text-gray-800 my-4" id="game-message">Select a card to play!</div>
+        <div class="text-lg text-gray-600" id="round-info"></div>
+
+        <div id="attribute-buttons" class="attribute-buttons hidden">
+            <button class="attribute-button" data-attribute="attack">Attack</button>
+            <button class="attribute-button" data-attribute="defense">Defense</button>
+            <button class="attribute-button" data-attribute="speed">Speed</button>
+        </div>
+
+        <div id="player-hand-container" class="player-hand-container">
+            </div>
 
         <div class="flex justify-center gap-4 mt-6">
-            <button id="draw-card-btn" class="game-button">Draw Card</button>
+            <button id="start-game-btn" class="game-button">Start Game</button>
             <button id="play-again-btn" class="game-button hidden">Play Again</button>
         </div>
     </div>
 
     <audio id="audio-draw" src="https://assets.mixkit.co/sfx/preview/mixkit-card-flip-302.mp3" preload="auto"></audio>
+    <audio id="audio-play-card" src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-click-1845.mp3" preload="auto"></audio>
+    <audio id="audio-reveal-card" src="https://assets.mixkit.co/sfx/preview/mixkit-fast-pop-reveal-1747.mp3" preload="auto"></audio>
     <audio id="audio-win-round" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-sparkle-852.mp3" preload="auto"></audio>
     <audio id="audio-lose-round" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-1159.mp3" preload="auto"></audio>
+    <audio id="audio-tie-round" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-ringing-animation-902.mp3" preload="auto"></audio>
     <audio id="audio-win-game" src="https://assets.mixkit.co/sfx/preview/mixkit-game-success-notification-2104.mp3" preload="auto"></audio>
     <audio id="audio-lose-game" src="https://assets.mixkit.co/sfx/preview/mixkit-loss-of-life-2029.mp3" preload="auto"></audio>
 
 
     <script>
-        // Game state variables
+        // --- Game State Variables ---
         let deck = [];
-        let playerScore = 0;
-        let opponentScore = 0;
-        const maxScore = 5; // First to 5 wins
-        const REVERSE_CARD_VALUE = 14; // Value for the special 'Reverse' card (higher than King 13)
+        let playerHand = [];
+        let opponentHand = [];
+        let tiePile = []; // Cards accumulated during a tie
+        let playerTurn = true; // True if player, false if AI
+        let playerSelectedCard = null; // The card element player clicked
+        let playerPlayedCard = null; // The actual card object player played
+        let opponentPlayedCard = null; // The actual card object AI played
 
-        // DOM elements
-        const playerCardEl = document.getElementById('player-card');
-        const opponentCardEl = document.getElementById('opponent-card');
-        const playerCardValueEl = document.getElementById('player-card-value');
-        const opponentCardValueEl = document.getElementById('opponent-card-value');
-        const playerScoreEl = document.getElementById('player-score');
-        const opponentScoreEl = document.getElementById('opponent-score');
+        // --- DOM Elements ---
+        const playerHandContainer = document.getElementById('player-hand-container');
+        const opponentHandCountEl = document.getElementById('opponent-card-count');
+        const opponentHandPlaceholder = document.getElementById('opponent-hand-placeholder');
+        const playerCardCountEl = document.getElementById('player-card-count');
+        const opponentPlayedCardSlot = document.getElementById('opponent-played-card');
+        const playerPlayedCardSlot = document.getElementById('player-played-card');
         const gameMessageEl = document.getElementById('game-message');
-        const drawCardBtn = document.getElementById('draw-card-btn');
+        const roundInfoEl = document.getElementById('round-info');
+        const attributeButtonsContainer = document.getElementById('attribute-buttons');
+        const startGameBtn = document.getElementById('start-game-btn');
         const playAgainBtn = document.getElementById('play-again-btn');
         const overallRecordEl = document.getElementById('overall-record');
 
-        // Audio elements
+        // --- Audio Elements ---
         const audioDraw = document.getElementById('audio-draw');
+        const audioPlayCard = document.getElementById('audio-play-card');
+        const audioRevealCard = document.getElementById('audio-reveal-card');
         const audioWinRound = document.getElementById('audio-win-round');
         const audioLoseRound = document.getElementById('audio-lose-round');
+        const audioTieRound = document.getElementById('audio-tie-round');
         const audioWinGame = document.getElementById('audio-win-game');
         const audioLoseGame = document.getElementById('audio-lose-game');
 
-        // Global Game Stats
-        let globalWins = parseInt(localStorage.getItem('globalWins') || '0');
-        let globalLosses = parseInt(localStorage.getItem('globalLosses') || '0');
+        // --- Global Game Stats ---
+        let globalWins = parseInt(localStorage.getItem('globalWinsAttribute') || '0');
+        let globalLosses = parseInt(localStorage.getItem('globalLossesAttribute') || '0');
+
+        // --- Card Data (Placeholder assets / values) ---
+        const BASE_CARDS = [
+            { id: 1, name: "Goblin", attack: 40, defense: 30, speed: 70, img: "https://placehold.co/100x100/A0A0A0/FFFFFF?text=Goblin" },
+            { id: 2, name: "Orc", attack: 60, defense: 50, speed: 30, img: "https://placehold.co/100x100/808080/FFFFFF?text=Orc" },
+            { id: 3, name: "Elf Archer", attack: 50, defense: 40, speed: 80, img: "https://placehold.co/100x100/70A070/FFFFFF?text=Elf" },
+            { id: 4, name: "Dwarf Warrior", attack: 70, defense: 80, speed: 20, img: "https://placehold.co/100x100/B87333/FFFFFF?text=Dwarf" },
+            { id: 5, name: "Dragon", attack: 90, defense: 85, speed: 60, img: "https://placehold.co/100x100/FF5733/FFFFFF?text=Dragon" },
+            { id: 6, name: "Griffin", attack: 75, defense: 60, speed: 90, img: "https://placehold.co/100x100/DAA520/FFFFFF?text=Griffin" },
+            { id: 7, name: "Golem", attack: 80, defense: 95, speed: 10, img: "https://placehold.co/100x100/556B2F/FFFFFF?text=Golem" },
+            { id: 8, name: "Wizard", attack: 85, defense: 35, speed: 55, img: "https://placehold.co/100x100/8A2BE2/FFFFFF?text=Wizard" },
+            { id: 9, name: "Vampire", attack: 65, defense: 65, speed: 75, img: "https://placehold.co/100x100/4B0082/FFFFFF?text=Vampire" },
+            { id: 10, name: "Werewolf", attack: 70, defense: 70, speed: 70, img: "https://placehold.co/100x100/8B4513/FFFFFF?text=Werewolf" }
+        ];
 
         /**
-         * Initializes the deck with cards (numbers 1-13, representing Ace to King, plus a Reverse card).
-         * Shuffles the deck.
+         * Creates a full deck by duplicating base cards and shuffles it.
          */
         function initializeDeck() {
             deck = [];
-            for (let i = 1; i <= 13; i++) {
-                // Add four of each card for a standard deck feel (A, 2-10, J, Q, K)
-                deck.push(i, i, i, i);
-            }
-            // Add a few special Reverse cards
-            deck.push(REVERSE_CARD_VALUE, REVERSE_CARD_VALUE); // Two Reverse cards
+            // Duplicate each base card 4 times for a deck of 40 cards
+            BASE_CARDS.forEach(card => {
+                for (let i = 0; i < 4; i++) {
+                    deck.push({ ...card, uuid: Math.random().toString(36).substring(2, 9) }); // Add unique ID
+                }
+            });
             shuffleDeck();
         }
 
         /**
          * Shuffles the current deck using Fisher-Yates (Knuth) algorithm.
          */
-        function shuffleDeck() {
-            for (let i = deck.length - 1; i > 0; i--) {
+        function shuffleDeck(targetDeck = deck) {
+            for (let i = targetDeck.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [deck[i], deck[j]] = [deck[j], deck[i]]; // Swap
+                [targetDeck[i], targetDeck[j]] = [targetDeck[j], targetDeck[i]]; // Swap
             }
         }
 
         /**
-         * Converts a card value to its display string (e.g., 1 -> 'A', 11 -> 'J').
-         * @param {number} value - The numerical card value.
-         * @returns {string} The display string for the card.
+         * Renders a card element.
+         * @param {object} card - The card object.
+         * @param {boolean} isFlipped - Whether the card should be face up.
+         * @param {string} slotId - Unique ID for the DOM element (e.g., 'player-card-X').
+         * @returns {HTMLElement} The created card div element.
          */
-        function getCardDisplayValue(value) {
-            if (value === 1) return 'A';
-            if (value === 11) return 'J';
-            if (value === 12) return 'Q';
-            if (value === 13) return 'K';
-            if (value === REVERSE_CARD_VALUE) return 'REV'; // Special display for Reverse card
-            return value.toString();
-        }
+        function createCardElement(card, isFlipped = false, slotId = '') {
+            const cardEl = document.createElement('div');
+            cardEl.classList.add('card');
+            if (slotId) cardEl.id = slotId;
 
-        /**
-         * Draws a single card from the deck.
-         * @returns {number | undefined} The card value, or undefined if deck is empty.
-         */
-        function drawCard() {
-            if (deck.length === 0) {
-                gameMessageEl.textContent = "Deck is empty! Click 'Play Again' to restart.";
-                drawCardBtn.disabled = true;
-                return undefined;
-            }
-            return deck.pop(); // Remove and return the last card
-        }
+            const cardBack = document.createElement('div');
+            cardBack.classList.add('card-back');
 
-        /**
-         * Resets the visual state of the cards (flips them back to face down, clears value).
-         * Removes animation classes.
-         */
-        function resetCardVisuals() {
-            playerCardEl.classList.remove('flipped', 'animate-draw', 'winner');
-            opponentCardEl.classList.remove('flipped', 'animate-draw', 'winner');
-            playerCardValueEl.textContent = '';
-            opponentCardValueEl.textContent = '';
-        }
+            const cardFront = document.createElement('div');
+            cardFront.classList.add('card-front');
 
-        /**
-         * Plays a specified audio element.
-         * @param {HTMLAudioElement} audioEl - The audio element to play.
-         */
-        function playSound(audioEl) {
-            audioEl.currentTime = 0; // Reset to start for quick replays
-            audioEl.play().catch(e => console.log("Audio play failed:", e)); // Catch potential errors
-        }
+            const cardName = document.createElement('div');
+            cardName.classList.add('card-name');
+            cardName.textContent = card.name;
 
-        /**
-         * Handles the main game logic for drawing cards and determining the round winner.
-         */
-        async function handleDrawCard() {
-            // Disable button during animation
-            drawCardBtn.disabled = true;
-            resetCardVisuals(); // Ensure cards are reset before drawing
+            const cardImgPlaceholder = document.createElement('div');
+            cardImgPlaceholder.classList.add('card-img-placeholder');
+            const imgEl = document.createElement('img');
+            imgEl.src = card.img;
+            imgEl.alt = card.name;
+            cardImgPlaceholder.appendChild(imgEl);
 
-            playSound(audioDraw);
-
-            // Small delay before drawing to allow visual reset
-            await new Promise(resolve => setTimeout(resolve, 100));
-
-            const playerCard = drawCard();
-            const opponentCard = drawCard();
-
-            if (playerCard === undefined || opponentCard === undefined) {
-                gameMessageEl.textContent = "Not enough cards in the deck! Game Over.";
-                endGame();
-                return;
+            const attributesDiv = document.createElement('div');
+            attributesDiv.classList.add('card-attributes');
+            for (const attr in card.attributes) {
+                const attrItem = document.createElement('div');
+                attrItem.classList.add('attribute-item');
+                attrItem.innerHTML = `<span class="attribute-label">${attr.charAt(0).toUpperCase() + attr.slice(1)}:</span> <span class="attribute-value">${card.attributes[attr]}</span>`;
+                attrItem.dataset.attribute = attr; // For easy identification during clicks
+                attributesDiv.appendChild(attrItem);
             }
 
-            // Apply animation classes for drawing
-            playerCardEl.classList.add('animate-draw');
-            opponentCardEl.classList.add('animate-draw');
-
-            // Set card values after a slight delay to allow initial draw animation
-            setTimeout(() => {
-                playerCardValueEl.textContent = getCardDisplayValue(playerCard);
-                opponentCardValueEl.textContent = getCardDisplayValue(opponentCard);
-
-                // Flip cards after animation
-                playerCardEl.classList.add('flipped');
-                opponentCardEl.classList.add('flipped');
-            }, 500); // This delay should match or be slightly less than the animation duration
-
-            // Wait for flip animation to complete before determining winner
-            await new Promise(resolve => setTimeout(resolve, 1100)); // 0.6s flip + 0.5s draw + buffer
-
-            determineRoundWinner(playerCard, opponentCard);
-        }
-
-        /**
-         * Determines the winner of the current round, updates scores, and checks for game winner.
-         * @param {number} pCard - Player's card value.
-         * @param {number} oCard - Opponent's card value.
-         */
-        function determineRoundWinner(pCard, oCard) {
-            let roundMessage = '';
-            let playerWinsRound = false;
-            let opponentWinsRound = false;
-            let isReverseRound = false;
-
-            // Check for Reverse Card
-            if (pCard === REVERSE_CARD_VALUE || oCard === REVERSE_CARD_VALUE) {
-                isReverseRound = true;
-                gameMessageEl.textContent = "A Reverse Card was played! Lowest card wins this round!";
-                // Adjust card values for comparison, ensuring REVERSE_CARD_VALUE doesn't auto-win/lose
-                pCard = (pCard === REVERSE_CARD_VALUE) ? 0 : pCard; // Treat reverse card as value 0 for comparison only
-                oCard = (oCard === REVERSE_CARD_VALUE) ? 0 : oCard;
-            }
-
-            if (!isReverseRound) {
-                // Normal High Card wins
-                if (pCard > oCard) {
-                    playerScore++;
-                    playerWinsRound = true;
-                    roundMessage = "You win this round!";
-                } else if (oCard > pCard) {
-                    opponentScore++;
-                    opponentWinsRound = true;
-                    roundMessage = "Opponent wins this round!";
-                } else {
-                    roundMessage = "It's a tie!";
-                }
-            } else {
-                // Reverse Round: Lowest card wins
-                if (pCard < oCard) {
-                    playerScore++;
-                    playerWinsRound = true;
-                    roundMessage = "You win this round! (Lowest card wins)";
-                } else if (oCard < pCard) {
-                    opponentScore++;
-                    opponentWinsRound = true;
-                    roundMessage = "Opponent wins this round! (Lowest card wins)";
-                } else {
-                    roundMessage = "It's a tie! (Reverse round)";
-                }
-            }
-
-            playerScoreEl.textContent = playerScore;
-            opponentScoreEl.textContent = opponentScore;
-            gameMessageEl.textContent = roundMessage;
-
-            // Apply winner animation and play sound
-            if (playerWinsRound) {
-                playerCardEl.classList.add('winner');
-                playSound(audioWinRound);
-            } else if (opponentWinsRound) {
-                opponentCardEl.classList.add('winner');
-                playSound(audioLoseRound);
-            }
-
-            checkForGameWinner();
-        }
-
-        /**
-         * Checks if either player has reached the maximum score and declares the game winner.
-         */
-        function checkForGameWinner() {
-            if (playerScore >= maxScore) {
-                gameMessageEl.textContent = `🎉 You win the game! First to ${maxScore} wins! 🎉`;
-                playSound(audioWinGame);
-                globalWins++;
-                saveGameStats();
-                endGame();
-            } else if (opponentScore >= maxScore) {
-                gameMessageEl.textContent = `😔 Opponent wins the game! First to ${maxScore} wins! 😔`;
-                playSound(audioLoseGame);
-                globalLosses++;
-                saveGameStats();
-                endGame();
-            } else {
-                // If game not over, re-enable draw button after a short delay for animation
-                setTimeout(() => {
-                    drawCardBtn.disabled = false;
-                }, 500); // Delay for winner animation to finish
-            }
-
-            // If deck runs out before a winner is decided
-            if (deck.length < 2 && playerScore < maxScore && opponentScore < maxScore) {
-                gameMessageEl.textContent = "Deck is empty! Game ended. Click 'Play Again' to restart.";
-                endGame();
-            }
-        }
-
-        /**
-         * Ends the current game session, disabling the draw button and showing play again.
-         */
-        function endGame() {
-            drawCardBtn.disabled = true;
-            drawCardBtn.classList.add('hidden');
-            playAgainBtn.classList.remove('hidden');
-        }
-
-        /**
-         * Resets all game state and visuals to start a new game.
-         */
-        function resetGame() {
-            playerScore = 0;
-            opponentScore = 0;
-            playerScoreEl.textContent = playerScore;
-            opponentScoreEl.textContent = opponentScore;
-            gameMessageEl.textContent = "P
+            cardFront.app
