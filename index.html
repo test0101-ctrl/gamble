@@ -2,28 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Card Wars - Adventure Time</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Card Wars</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="app">
-    <header>
-      <h1>Card Wars</h1>
-    </header>
-    <main>
-      <section id="game-board">
-        <div class="lane-row" id="opponent-lanes"></div>
-        <div class="lane-row" id="player-lanes"></div>
-      </section>
-      <section id="hand">
-        <h2>Your Hand</h2>
-        <div id="card-hand"></div>
-      </section>
-      <button id="end-turn">End Turn</button>
-      <div id="log"></div>
-    </main>
+  <h1>Card Wars Lite</h1>
+  <div id="hp-display"></div>
+  <div id="game-board">
+    <div id="opponent-lanes" class="lane-row"></div>
+    <div id="player-lanes" class="lane-row"></div>
   </div>
-  <script src="script.js"></script>
+  <div id="hand"></div>
+  <button onclick="resolveTurn()">End Turn</button>
+  <div id="log"></div>
+
+  <script src="scripts.js"></script>
 </body>
 </html>
