@@ -1,115 +1,202 @@
-/* Estilos globais */
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: radial-gradient(circle, #2a2a72, #009ffd);
-    color: white;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #a7e0ed, #c9f0bd); /* Adventure Time sky colors */
+    min-height: 100vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    overflow: hidden;
+    padding: 1rem;
 }
-
-/* Contêiner principal */
-.container {
-    background: rgba(0, 0, 0, 0.8);
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    padding: 20px;
-    width: 90%;
-    max-width: 400px;
+#game-container {
+    background-color: #fff;
+    border-radius: 1.5rem; /* More rounded */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1); /* Deeper shadow */
+    max-width: 900px; /* Increased max-width */
+    width: 100%;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative; /* For message box positioning */
+}
+.player-area {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.player-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f0fdf4; /* Light green background for info */
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    box-shadow: inset 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+.landscape-area {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    padding: 0.5rem;
+    background-color: #e2e8f0; /* Light blue-gray for board */
+    border-radius: 1rem;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+.landscape-slot {
+    height: 120px; /* Slightly taller for cards */
+    background-color: #cbd5e1; /* Even lighter gray for empty slots */
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 2px dashed rgba(0,0,0,0.1);
+    position: relative;
+}
+.card {
+    background-color: #fefcbf; /* Warm yellow for cards */
+    border: 2px solid #fbd38d; /* Orange border */
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    width: 95%; /* Adjust width to fit slot with some padding */
+    height: 95%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
     text-align: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease-in-out;
+    position: absolute; /* Position cards within slots */
+    top: 2.5%;
+    left: 2.5%;
 }
-
-h1 {
-    font-size: 2rem;
-    margin-bottom: 20px;
+.card-in-hand {
+    width: 80px; /* Smaller cards in hand */
+    height: 110px;
+    font-size: 0.65rem;
+    margin: 0 0.25rem;
+    display: inline-flex; /* To line them up */
+    flex-shrink: 0; /* Prevent shrinking */
 }
-
-/* Abas de navegação */
-.tab {
+.card-in-hand:hover {
+    transform: translateY(-5px) scale(1.05); /* Lift and grow slightly */
+}
+.card.exhausted {
+    opacity: 0.6;
+    transform: rotate(90deg); /* Turn sideways when exhausted */
+    transform-origin: center center;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+.card-stats {
     display: flex;
     justify-content: space-around;
-    margin-bottom: 20px;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-weight: 600;
 }
-
-.tab button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.2rem;
+.card-floop {
+    font-size: 0.6rem;
+    color: #4a5568; /* Darker gray for floop text */
+    margin-top: 0.25rem;
+}
+.player-hand {
+    display: flex;
+    overflow-x: auto; /* Allow horizontal scrolling for many cards */
+    padding: 0.5rem;
+    background-color: #edf2f7; /* Light gray for hand area */
+    border-radius: 1rem;
+    box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    min-height: 130px; /* Ensure space even if hand is empty */
+    align-items: flex-start; /* Align cards to the top */
+}
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    color: #fff;
     cursor: pointer;
-    padding: 10px;
-    border-bottom: 2px solid transparent;
-}
-
-.tab button.active {
-    border-bottom: 2px solid #f39c12;
-}
-
-/* Formulários */
-.form {
-    display: none;
-}
-
-.form.active {
-    display: block;
-}
-
-input {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Button shadow */
+    background: linear-gradient(135deg, #4299e1, #3182ce); /* Blue gradient */
     border: none;
-    font-size: 1rem;
+}
+.btn:hover {
+    background: linear-gradient(135deg, #3182ce, #2c5282); /* Darker blue on hover */
+    transform: translateY(-2px);
+}
+.btn:disabled {
+    background: #a0aec0; /* Gray when disabled */
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
-button.submit {
-    width: 100%;
-    background: #f39c12;
-    border: none;
-    padding: 10px;
-    border-radius: 5px;
-    font-size: 1rem;
-    color: white;
-    cursor: pointer;
-}
-
-/* Jogos */
-.games {
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
+#message-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
     text-align: center;
+    z-index: 1000;
+    display: none; /* Hidden by default */
+    border: 3px solid #63b3ed; /* Light blue border */
 }
 
-.game-container {
-    margin: 20px auto;
-    padding: 20px;
-    background: rgba(0, 0, 0, 0.9);
-    border-radius: 10px;
+#message-box button {
+    margin-top: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    background-color: #48bb78; /* Green button */
     color: white;
-}
-
-.game-title {
-    font-size: 2rem;
-    margin-bottom: 10px;
-    color: #ffcc29;
-}
-
-button.game-btn {
-    background: #f39c12;
     border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-size: 1rem;
-    color: white;
+    border-radius: 0.5rem;
     cursor: pointer;
-    transition: 0.3s ease;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+#message-box button:hover {
+    background-color: #38a169;
 }
 
-button.game-btn:hover {
-    background: #ffcc29;
-}
+/* Mobile adjustments */
+@media (max-width: 640px) {
+    #game-container {
+        padding: 1rem;
+        gap: 1rem;
+    }
+    .landscape-area {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on small screens */
+        gap: 0.5rem;
+    }
+    .landscape-slot {
+        height: 100px;
+    }
+    .card {
+        font-size: 0.65rem;
+        padding: 0.25rem;
+    }
+    .card-in-hand {
+        width: 70px;
+        height: 95px;
+    }
+    .controls {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .btn {
+        width: 100%;
+    }
+        }
