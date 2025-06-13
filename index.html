@@ -1,62 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adventure Time Card Wars</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Wars - Adventure Time</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="selection:bg-yellow-200">
-    <div id="game-container">
-        <div id="player2-area" class="player-area">
-            <div class="player-info">
-                <h3 class="text-lg font-bold text-gray-700">Player 2</h3>
-                <div class="flex items-center gap-2">
-                    <span class="text-sm font-semibold text-red-600">HP: <span id="player2-hp"></span></span>
-                    <span class="text-sm font-semibold text-blue-600">Actions: <span id="player2-actions"></span></span>
-                </div>
-            </div>
-            <div id="player2-board" class="landscape-area">
-                <div class="landscape-slot" data-player="1" data-lane="0"></div>
-                <div class="landscape-slot" data-player="1" data-lane="1"></div>
-                <div class="landscape-slot" data-player="1" data-lane="2"></div>
-                <div class="landscape-slot" data-player="1" data-lane="3"></div>
-            </div>
-            <div id="player2-hand" class="player-hand bg-gray-200">
-                </div>
-        </div>
-
-        <div class="controls">
-            <button id="end-turn-btn" class="btn">End Turn</button>
-            <button id="restart-game-btn" class="btn bg-red-500 hover:bg-red-700">Restart Game</button>
-        </div>
-
-        <div id="player1-area" class="player-area">
-            <div id="player1-hand" class="player-hand">
-                </div>
-            <div id="player1-board" class="landscape-area">
-                <div class="landscape-slot" data-player="0" data-lane="0"></div>
-                <div class="landscape-slot" data-player="0" data-lane="1"></div>
-                <div class="landscape-slot" data-player="0" data-lane="2"></div>
-                <div class="landscape-slot" data-player="0" data-lane="3"></div>
-            </div>
-            <div class="player-info">
-                <h3 class="text-lg font-bold text-gray-700">Player 1</h3>
-                <div class="flex items-center gap-2">
-                    <span class="text-sm font-semibold text-red-600">HP: <span id="player1-hp"></span></span>
-                    <span class="text-sm font-semibold text-blue-600">Actions: <span id="player1-actions"></span></span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="message-box" class="hidden">
-        <p id="message-text" class="text-xl font-semibold text-gray-800"></p>
-        <button id="message-ok-btn">OK</button>
-    </div>
-
-    <script src="scripts.js" defer></script>
+<body>
+  <div id="app">
+    <header>
+      <h1>Card Wars</h1>
+    </header>
+    <main>
+      <section id="game-board">
+        <div class="lane-row" id="opponent-lanes"></div>
+        <div class="lane-row" id="player-lanes"></div>
+      </section>
+      <section id="hand">
+        <h2>Your Hand</h2>
+        <div id="card-hand"></div>
+      </section>
+      <button id="end-turn">End Turn</button>
+      <div id="log"></div>
+    </main>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
