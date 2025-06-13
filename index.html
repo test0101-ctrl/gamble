@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High Card Showdown!</title>
-    <!-- Tailwind CSS CDN for general utility classes -->
+    <title>High Card Showdown! (Enhanced)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -59,7 +58,7 @@
             height: 100%;
             border-radius: inherit;
             /* Embedded SVG for the card back */
-            background-image: url("data:image/svg+xml;base64,PHN2ZyB2aWR0aD0iMTAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxNTAlIiBmaWxsPSIjNjQ5NUVEIiByeD0iOCIgcnk9IjgiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9Ijc1IiByPSIzMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjgiLz4KICA8cGF0aCBkPSJNNTAgNDVMMzAgNzVIMjBMNTAgMTIwTDUwIDc1Wk01MCA0NUwyMCA3NUgyMkw1MCAxMjBaTTYwIDc1QzcwIDc1IDc1IDcwIDc1IDYwQzc1IDUwIDcwIDQ1IDYwIDQ1QzUwIDQ1IDQ1IDUwIDQ1IDYwQzQ1IDcwIDUwIDc1IDYwIDc1WiIgZmlsbD0iI2ZmZmZmZiIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iNzAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjgiIGZpbGw9IiNmZmZmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIHRleHQtcGF0aD0iMjUiPkNhcmQ8L3RleHQ+Cjwvc3ZnPg==");
+            background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxNTAlIiBmaWxsPSIjNjQ5NUVEIiByeD0iOCIgcnk9IjgiLz4KICA8cGF0aCBkPSJNNTAgNDVMMzAgNzVIMjBMNTAgMTIwTDUwIDc1Wk01MCA0NUwyMCA3NUgyMkw1MCAxMjBaTTYwIDc1QzcwIDc1IDc1IDcwIDc1IDYwQzc1IDUwIDcwIDQ1IDYwIDQ1QzUwIDQ1IDQ1IDUwIDQ1IDYwQzQ1IDcwIDUwIDc1IDYwIDc1WiIgZmlsbD0iI2ZmZmZmZiIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iNzAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjgiIGZpbGw9IiNmZmZmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIHRleHQtcGF0aD0iMjUiPkNhcmQ8L3RleHQ+Cjwvc3ZnPg==");
             background-size: cover;
             backface-visibility: hidden;
             z-index: 2;
@@ -108,6 +107,17 @@
 
         #opponent-card.animate-draw {
             animation: draw-card-opponent 0.5s ease-out forwards;
+        }
+
+        /* Winning card animation */
+        @keyframes bounce-winner {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        .card.winner {
+            animation: bounce-winner 0.4s ease-out; /* Slightly faster bounce for immediate feedback */
+            box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.7); /* Gold glow */
         }
 
         /* Button styling */
@@ -190,20 +200,19 @@
         <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">High Card Showdown!</h1>
 
         <div class="flex justify-between items-center w-full">
-            <!-- Opponent Area -->
             <div class="flex flex-col items-start opponent-area">
                 <h2 class="text-xl md:text-2xl font-semibold text-gray-700">Opponent</h2>
                 <div class="text-3xl md:text-4xl font-bold text-blue-600" id="opponent-score">0</div>
             </div>
 
-            <!-- Player Area -->
             <div class="flex flex-col items-end player-area">
                 <h2 class="text-xl md:text-2xl font-semibold text-gray-700">You</h2>
                 <div class="text-3xl md:text-4xl font-bold text-green-600" id="player-score">0</div>
             </div>
         </div>
 
-        <!-- Play Area -->
+        <div class="text-md font-medium text-gray-600" id="overall-record">Wins: 0 | Losses: 0</div>
+
         <div class="flex justify-around items-center w-full my-8 play-area">
             <div id="opponent-card" class="card">
                 <div class="card-back"></div>
@@ -215,15 +224,20 @@
             </div>
         </div>
 
-        <!-- Game Messages -->
         <div class="text-2xl md:text-3xl font-semibold text-gray-800 my-4" id="game-message">Press "Draw Card" to start!</div>
 
-        <!-- Controls -->
         <div class="flex justify-center gap-4 mt-6">
             <button id="draw-card-btn" class="game-button">Draw Card</button>
             <button id="play-again-btn" class="game-button hidden">Play Again</button>
         </div>
     </div>
+
+    <audio id="audio-draw" src="https://assets.mixkit.co/sfx/preview/mixkit-card-flip-302.mp3" preload="auto"></audio>
+    <audio id="audio-win-round" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-sparkle-852.mp3" preload="auto"></audio>
+    <audio id="audio-lose-round" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-1159.mp3" preload="auto"></audio>
+    <audio id="audio-win-game" src="https://assets.mixkit.co/sfx/preview/mixkit-game-success-notification-2104.mp3" preload="auto"></audio>
+    <audio id="audio-lose-game" src="https://assets.mixkit.co/sfx/preview/mixkit-loss-of-life-2029.mp3" preload="auto"></audio>
+
 
     <script>
         // Game state variables
@@ -231,6 +245,7 @@
         let playerScore = 0;
         let opponentScore = 0;
         const maxScore = 5; // First to 5 wins
+        const REVERSE_CARD_VALUE = 14; // Value for the special 'Reverse' card (higher than King 13)
 
         // DOM elements
         const playerCardEl = document.getElementById('player-card');
@@ -242,17 +257,31 @@
         const gameMessageEl = document.getElementById('game-message');
         const drawCardBtn = document.getElementById('draw-card-btn');
         const playAgainBtn = document.getElementById('play-again-btn');
+        const overallRecordEl = document.getElementById('overall-record');
+
+        // Audio elements
+        const audioDraw = document.getElementById('audio-draw');
+        const audioWinRound = document.getElementById('audio-win-round');
+        const audioLoseRound = document.getElementById('audio-lose-round');
+        const audioWinGame = document.getElementById('audio-win-game');
+        const audioLoseGame = document.getElementById('audio-lose-game');
+
+        // Global Game Stats
+        let globalWins = parseInt(localStorage.getItem('globalWins') || '0');
+        let globalLosses = parseInt(localStorage.getItem('globalLosses') || '0');
 
         /**
-         * Initializes the deck with cards (numbers 1-13, representing Ace to King).
+         * Initializes the deck with cards (numbers 1-13, representing Ace to King, plus a Reverse card).
          * Shuffles the deck.
          */
         function initializeDeck() {
             deck = [];
             for (let i = 1; i <= 13; i++) {
-                // Add four of each card for a standard deck feel
+                // Add four of each card for a standard deck feel (A, 2-10, J, Q, K)
                 deck.push(i, i, i, i);
             }
+            // Add a few special Reverse cards
+            deck.push(REVERSE_CARD_VALUE, REVERSE_CARD_VALUE); // Two Reverse cards
             shuffleDeck();
         }
 
@@ -264,6 +293,20 @@
                 const j = Math.floor(Math.random() * (i + 1));
                 [deck[i], deck[j]] = [deck[j], deck[i]]; // Swap
             }
+        }
+
+        /**
+         * Converts a card value to its display string (e.g., 1 -> 'A', 11 -> 'J').
+         * @param {number} value - The numerical card value.
+         * @returns {string} The display string for the card.
+         */
+        function getCardDisplayValue(value) {
+            if (value === 1) return 'A';
+            if (value === 11) return 'J';
+            if (value === 12) return 'Q';
+            if (value === 13) return 'K';
+            if (value === REVERSE_CARD_VALUE) return 'REV'; // Special display for Reverse card
+            return value.toString();
         }
 
         /**
@@ -284,10 +327,19 @@
          * Removes animation classes.
          */
         function resetCardVisuals() {
-            playerCardEl.classList.remove('flipped', 'animate-draw');
-            opponentCardEl.classList.remove('flipped', 'animate-draw');
+            playerCardEl.classList.remove('flipped', 'animate-draw', 'winner');
+            opponentCardEl.classList.remove('flipped', 'animate-draw', 'winner');
             playerCardValueEl.textContent = '';
             opponentCardValueEl.textContent = '';
+        }
+
+        /**
+         * Plays a specified audio element.
+         * @param {HTMLAudioElement} audioEl - The audio element to play.
+         */
+        function playSound(audioEl) {
+            audioEl.currentTime = 0; // Reset to start for quick replays
+            audioEl.play().catch(e => console.log("Audio play failed:", e)); // Catch potential errors
         }
 
         /**
@@ -298,6 +350,8 @@
             drawCardBtn.disabled = true;
             resetCardVisuals(); // Ensure cards are reset before drawing
 
+            playSound(audioDraw);
+
             // Small delay before drawing to allow visual reset
             await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -305,20 +359,19 @@
             const opponentCard = drawCard();
 
             if (playerCard === undefined || opponentCard === undefined) {
-                // This shouldn't happen if deck check is earlier, but good for robustness
-                gameMessageEl.textContent = "Not enough cards in the deck!";
-                drawCardBtn.disabled = true;
+                gameMessageEl.textContent = "Not enough cards in the deck! Game Over.";
+                endGame();
                 return;
             }
 
-            // Apply animation classes
+            // Apply animation classes for drawing
             playerCardEl.classList.add('animate-draw');
             opponentCardEl.classList.add('animate-draw');
 
-            // Set card values after a slight delay to allow initial animation
+            // Set card values after a slight delay to allow initial draw animation
             setTimeout(() => {
-                playerCardValueEl.textContent = playerCard;
-                opponentCardValueEl.textContent = opponentCard;
+                playerCardValueEl.textContent = getCardDisplayValue(playerCard);
+                opponentCardValueEl.textContent = getCardDisplayValue(opponentCard);
 
                 // Flip cards after animation
                 playerCardEl.classList.add('flipped');
@@ -338,18 +391,59 @@
          */
         function determineRoundWinner(pCard, oCard) {
             let roundMessage = '';
-            if (pCard > oCard) {
-                playerScore++;
-                roundMessage = "You win this round!";
-                playerScoreEl.textContent = playerScore;
-            } else if (oCard > pCard) {
-                opponentScore++;
-                roundMessage = "Opponent wins this round!";
-                opponentScoreEl.textContent = opponentScore;
-            } else {
-                roundMessage = "It's a tie!";
+            let playerWinsRound = false;
+            let opponentWinsRound = false;
+            let isReverseRound = false;
+
+            // Check for Reverse Card
+            if (pCard === REVERSE_CARD_VALUE || oCard === REVERSE_CARD_VALUE) {
+                isReverseRound = true;
+                gameMessageEl.textContent = "A Reverse Card was played! Lowest card wins this round!";
+                // Adjust card values for comparison, ensuring REVERSE_CARD_VALUE doesn't auto-win/lose
+                pCard = (pCard === REVERSE_CARD_VALUE) ? 0 : pCard; // Treat reverse card as value 0 for comparison only
+                oCard = (oCard === REVERSE_CARD_VALUE) ? 0 : oCard;
             }
+
+            if (!isReverseRound) {
+                // Normal High Card wins
+                if (pCard > oCard) {
+                    playerScore++;
+                    playerWinsRound = true;
+                    roundMessage = "You win this round!";
+                } else if (oCard > pCard) {
+                    opponentScore++;
+                    opponentWinsRound = true;
+                    roundMessage = "Opponent wins this round!";
+                } else {
+                    roundMessage = "It's a tie!";
+                }
+            } else {
+                // Reverse Round: Lowest card wins
+                if (pCard < oCard) {
+                    playerScore++;
+                    playerWinsRound = true;
+                    roundMessage = "You win this round! (Lowest card wins)";
+                } else if (oCard < pCard) {
+                    opponentScore++;
+                    opponentWinsRound = true;
+                    roundMessage = "Opponent wins this round! (Lowest card wins)";
+                } else {
+                    roundMessage = "It's a tie! (Reverse round)";
+                }
+            }
+
+            playerScoreEl.textContent = playerScore;
+            opponentScoreEl.textContent = opponentScore;
             gameMessageEl.textContent = roundMessage;
+
+            // Apply winner animation and play sound
+            if (playerWinsRound) {
+                playerCardEl.classList.add('winner');
+                playSound(audioWinRound);
+            } else if (opponentWinsRound) {
+                opponentCardEl.classList.add('winner');
+                playSound(audioLoseRound);
+            }
 
             checkForGameWinner();
         }
@@ -360,13 +454,21 @@
         function checkForGameWinner() {
             if (playerScore >= maxScore) {
                 gameMessageEl.textContent = `🎉 You win the game! First to ${maxScore} wins! 🎉`;
+                playSound(audioWinGame);
+                globalWins++;
+                saveGameStats();
                 endGame();
             } else if (opponentScore >= maxScore) {
                 gameMessageEl.textContent = `😔 Opponent wins the game! First to ${maxScore} wins! 😔`;
+                playSound(audioLoseGame);
+                globalLosses++;
+                saveGameStats();
                 endGame();
             } else {
-                // If game not over, re-enable draw button
-                drawCardBtn.disabled = false;
+                // If game not over, re-enable draw button after a short delay for animation
+                setTimeout(() => {
+                    drawCardBtn.disabled = false;
+                }, 500); // Delay for winner animation to finish
             }
 
             // If deck runs out before a winner is decided
@@ -393,22 +495,4 @@
             opponentScore = 0;
             playerScoreEl.textContent = playerScore;
             opponentScoreEl.textContent = opponentScore;
-            gameMessageEl.textContent = "Press 'Draw Card' to start!";
-            drawCardBtn.disabled = false;
-            drawCardBtn.classList.remove('hidden');
-            playAgainBtn.classList.add('hidden');
-            resetCardVisuals();
-            initializeDeck(); // Re-initialize and shuffle for a new game
-        }
-
-        // Event Listeners
-        drawCardBtn.addEventListener('click', handleDrawCard);
-        playAgainBtn.addEventListener('click', resetGame);
-
-        // Initialize game on window load
-        window.onload = function() {
-            resetGame(); // Call resetGame to set up the initial state
-        };
-    </script>
-</body>
-</html>
+            gameMessageEl.textContent = "P
