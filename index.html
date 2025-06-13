@@ -3,250 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cassino - Login e Jogos</title>
+    <title>Adventure Time Card Wars</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: radial-gradient(circle, #2a2a72, #009ffd);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .container {
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            padding: 20px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 20px;
-        }
-
-        .tab {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
-        }
-
-        .tab button {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 10px;
-            border-bottom: 2px solid transparent;
-        }
-
-        .tab button.active {
-            border-bottom: 2px solid #f39c12;
-        }
-
-        .form {
-            display: none;
-        }
-
-        .form.active {
-            display: block;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: none;
-            font-size: 1rem;
-        }
-
-        button.submit {
-            width: 100%;
-            background: #f39c12;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 1rem;
-            color: white;
-            cursor: pointer;
-        }
-
-        .games {
-            display: none;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .game-container {
-            margin: 20px auto;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.9);
-            border-radius: 10px;
-            color: white;
-            text-align: center;
-            animation: fadeIn 1.5s ease-in-out;
-        }
-
-        .game-title {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            color: #ffcc29;
-        }
-
-        .game-output {
-            font-size: 1.2rem;
-            margin: 15px 0;
-            color: white;
-            min-height: 40px;
-            transition: all 0.5s ease-in-out;
-            opacity: 0;
-        }
-
-        .game-output.show {
-            opacity: 1;
-        }
-
-        button.game-btn {
-            background: #f39c12;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            font-size: 1rem;
-            color: white;
-            cursor: pointer;
-            margin: 5px;
-            transition: 0.3s ease;
-        }
-
-        button.game-btn:hover {
-            background: #ffcc29;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .roulette-spin {
-            width: 50px;
-            height: 50px;
-            border: 5px solid transparent;
-            border-top: 5px solid #ffcc29;
-            border-radius: 50%;
-            margin: 10px auto;
-            animation: spin 2s linear infinite;
-        }
-    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Cassino Online</h1>
-        <div class="tab">
-            <button id="login-tab" class="active" onclick="showForm('login')">Login</button>
-            <button id="register-tab" onclick="showForm('register')">Register</button>
+<body class="selection:bg-yellow-200">
+    <div id="game-container">
+        <div id="player2-area" class="player-area">
+            <div class="player-info">
+                <h3 class="text-lg font-bold text-gray-700">Player 2</h3>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-red-600">HP: <span id="player2-hp"></span></span>
+                    <span class="text-sm font-semibold text-blue-600">Actions: <span id="player2-actions"></span></span>
+                </div>
+            </div>
+            <div id="player2-board" class="landscape-area">
+                <div class="landscape-slot" data-player="1" data-lane="0"></div>
+                <div class="landscape-slot" data-player="1" data-lane="1"></div>
+                <div class="landscape-slot" data-player="1" data-lane="2"></div>
+                <div class="landscape-slot" data-player="1" data-lane="3"></div>
+            </div>
+            <div id="player2-hand" class="player-hand bg-gray-200">
+                </div>
         </div>
-        
-        <form id="login" class="form active" onsubmit="event.preventDefault(); login()">
-            <input type="text" id="login-username" placeholder="Username" required>
-            <input type="password" id="login-password" placeholder="Password" required>
-            <button class="submit">Entrar</button>
-        </form>
 
-        <form id="register" class="form" onsubmit="event.preventDefault(); register()">
-            <input type="text" id="register-username" placeholder="Username" required>
-            <input type="password" id="register-password" placeholder="Password" required>
-            <button class="submit">Registrar</button>
-        </form>
+        <div class="controls">
+            <button id="end-turn-btn" class="btn">End Turn</button>
+            <button id="restart-game-btn" class="btn bg-red-500 hover:bg-red-700">Restart Game</button>
+        </div>
 
-        <p class="casino-theme">Jogue blackjack e roleta ao vivo! <a href="#">Saiba mais</a>.</p>
+        <div id="player1-area" class="player-area">
+            <div id="player1-hand" class="player-hand">
+                </div>
+            <div id="player1-board" class="landscape-area">
+                <div class="landscape-slot" data-player="0" data-lane="0"></div>
+                <div class="landscape-slot" data-player="0" data-lane="1"></div>
+                <div class="landscape-slot" data-player="0" data-lane="2"></div>
+                <div class="landscape-slot" data-player="0" data-lane="3"></div>
+            </div>
+            <div class="player-info">
+                <h3 class="text-lg font-bold text-gray-700">Player 1</h3>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-red-600">HP: <span id="player1-hp"></span></span>
+                    <span class="text-sm font-semibold text-blue-600">Actions: <span id="player1-actions"></span></span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="games">
-        <!-- Blackjack -->
-        <div class="game-container">
-            <h2 class="game-title">Blackjack</h2>
-            <p>Jogue contra o dealer. Tente tirar a maior carta!</p>
-            <button class="game-btn" onclick="playBlackjack()">Jogar Blackjack</button>
-            <div class="game-output" id="blackjack-output"></div>
-        </div>
-
-        <!-- Roleta -->
-        <div class="game-container">
-            <h2 class="game-title">Roleta</h2>
-            <p>Escolha um número (0-36) e teste sua sorte!</p>
-            <input type="number" id="roulette-bet" placeholder="Aposte um número" min="0" max="36">
-            <button class="game-btn" onclick="playRoulette()">Jogar Roleta</button>
-            <div class="roulette-spin" id="roulette-spin" style="display: none;"></div>
-            <div class="game-output" id="roulette-output"></div>
-        </div>
+    <div id="message-box" class="hidden">
+        <p id="message-text" class="text-xl font-semibold text-gray-800"></p>
+        <button id="message-ok-btn">OK</button>
     </div>
 
-    <script>
-        const users = {}; // Simulando um banco de dados no frontend.
-
-        function login() {
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-
-            if (users[username] && users[username] === password) {
-                alert(`Bem-vindo, ${username}!`);
-                showGames();
-            } else {
-                alert("Credenciais inválidas. Tente novamente.");
-            }
-        }
-
-        function register() {
-            const username = document.getElementById('register-username').value;
-            const password = document.getElementById('register-password').value;
-
-            if (users[username]) {
-                alert("Usuário já registrado!");
-            } else {
-                users[username] = password;
-                alert("Registro bem-sucedido! Faça login para jogar.");
-            }
-        }
-
-        function showForm(form) {
-            document.querySelectorAll('.form').forEach(f => f.classList.remove('active'));
-            document.querySelectorAll('.tab button').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(form).classList.add('active');
-            document.getElementById(`${form}-tab`).classList.add('active');
-        }
-
-        function showGames() {
-            document.querySelector('.container').style.display = 'none';
-            document.querySelector('.games').style.display = 'block';
-        }
-
-        function playBlackjack() {
-            const output = document.getElementById('blackjack-output');
-            output.innerText = "Revelando as cartas...";
-            output.classList.remove('show');
-        
+    <script src="scripts.js" defer></script>
+</body>
+</html>
