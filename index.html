@@ -1,22 +1,414 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Card Wars</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <h1>Card Wars Lite</h1>
-  <div id="hp-display"></div>
-  <div id="game-board">
-    <div id="opponent-lanes" class="lane-row"></div>
-    <div id="player-lanes" class="lane-row"></div>
-  </div>
-  <div id="hand"></div>
-  <button onclick="resolveTurn()">End Turn</button>
-  <div id="log"></div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High Card Showdown!</title>
+    <!-- Tailwind CSS CDN for general utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom CSS for card game specific styling and animations */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbar from animation */
+        }
 
-  <script src="scripts.js"></script>
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 2.5rem;
+            max-width: 900px;
+            width: 95%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .card {
+            width: 100px;
+            height: 150px;
+            background-color: #e0e0e0;
+            border: 2px solid #333;
+            border-radius: 0.75rem; /* Slightly less rounded than container */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s ease-out; /* For flip animation */
+        }
+
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background-image: url('https://placehold.co/100x150/6495ED/ffffff?text=CARD'); /* Card back image */
+            background-size: cover;
+            backface-visibility: hidden;
+            z-index: 2;
+        }
+
+        .card-front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: #333;
+            backface-visibility: hidden;
+            transform: rotateY(180deg);
+            z-index: 1;
+        }
+
+        /* Animation for card flip */
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* Animation for drawing cards */
+        @keyframes draw-card-player {
+            0% { transform: translate(-150%, 0) rotateY(0deg); opacity: 0; }
+            100% { transform: translate(0, 0) rotateY(0deg); opacity: 1; }
+        }
+
+        @keyframes draw-card-opponent {
+            0% { transform: translate(150%, 0) rotateY(0deg); opacity: 0; }
+            100% { transform: translate(0, 0) rotateY(0deg); opacity: 1; }
+        }
+
+        #player-card, #opponent-card {
+            animation: none; /* Reset to prevent initial animation */
+        }
+
+        #player-card.animate-draw {
+            animation: draw-card-player 0.5s ease-out forwards;
+        }
+
+        #opponent-card.animate-draw {
+            animation: draw-card-opponent 0.5s ease-out forwards;
+        }
+
+        /* Button styling */
+        .game-button {
+            background: linear-gradient(145deg, #6a82fb, #fc5c7d); /* Gradient background */
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 9999px; /* Pill shape */
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease-in-out;
+            border: none;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .game-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 20px -3px rgba(0, 0, 0, 0.2), 0 6px 8px -2px rgba(0, 0, 0, 0.08);
+        }
+
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 10px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+        }
+
+        .game-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 1.5rem;
+                gap: 1.5rem;
+            }
+            .card {
+                width: 80px;
+                height: 120px;
+                font-size: 2rem;
+            }
+            .card-front {
+                font-size: 2.5rem;
+            }
+            .player-area, .opponent-area {
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            .play-area {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 1rem;
+            }
+            .card {
+                width: 70px;
+                height: 100px;
+                font-size: 1.8rem;
+            }
+            .card-front {
+                font-size: 2rem;
+            }
+            .game-button {
+                padding: 0.6rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="game-container">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">High Card Showdown!</h1>
+
+        <div class="flex justify-between items-center w-full">
+            <!-- Opponent Area -->
+            <div class="flex flex-col items-start opponent-area">
+                <h2 class="text-xl md:text-2xl font-semibold text-gray-700">Opponent</h2>
+                <div class="text-3xl md:text-4xl font-bold text-blue-600" id="opponent-score">0</div>
+            </div>
+
+            <!-- Player Area -->
+            <div class="flex flex-col items-end player-area">
+                <h2 class="text-xl md:text-2xl font-semibold text-gray-700">You</h2>
+                <div class="text-3xl md:text-4xl font-bold text-green-600" id="player-score">0</div>
+            </div>
+        </div>
+
+        <!-- Play Area -->
+        <div class="flex justify-around items-center w-full my-8 play-area">
+            <div id="opponent-card" class="card">
+                <div class="card-back"></div>
+                <div class="card-front" id="opponent-card-value"></div>
+            </div>
+            <div id="player-card" class="card">
+                <div class="card-back"></div>
+                <div class="card-front" id="player-card-value"></div>
+            </div>
+        </div>
+
+        <!-- Game Messages -->
+        <div class="text-2xl md:text-3xl font-semibold text-gray-800 my-4" id="game-message">Press "Draw Card" to start!</div>
+
+        <!-- Controls -->
+        <div class="flex justify-center gap-4 mt-6">
+            <button id="draw-card-btn" class="game-button">Draw Card</button>
+            <button id="play-again-btn" class="game-button hidden">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state variables
+        let deck = [];
+        let playerScore = 0;
+        let opponentScore = 0;
+        const maxScore = 5; // First to 5 wins
+
+        // DOM elements
+        const playerCardEl = document.getElementById('player-card');
+        const opponentCardEl = document.getElementById('opponent-card');
+        const playerCardValueEl = document.getElementById('player-card-value');
+        const opponentCardValueEl = document.getElementById('opponent-card-value');
+        const playerScoreEl = document.getElementById('player-score');
+        const opponentScoreEl = document.getElementById('opponent-score');
+        const gameMessageEl = document.getElementById('game-message');
+        const drawCardBtn = document.getElementById('draw-card-btn');
+        const playAgainBtn = document.getElementById('play-again-btn');
+
+        /**
+         * Initializes the deck with cards (numbers 1-13, representing Ace to King).
+         * Shuffles the deck.
+         */
+        function initializeDeck() {
+            deck = [];
+            for (let i = 1; i <= 13; i++) {
+                // Add four of each card for a standard deck feel
+                deck.push(i, i, i, i);
+            }
+            shuffleDeck();
+        }
+
+        /**
+         * Shuffles the current deck using Fisher-Yates (Knuth) algorithm.
+         */
+        function shuffleDeck() {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]]; // Swap
+            }
+        }
+
+        /**
+         * Draws a single card from the deck.
+         * @returns {number | undefined} The card value, or undefined if deck is empty.
+         */
+        function drawCard() {
+            if (deck.length === 0) {
+                gameMessageEl.textContent = "Deck is empty! Click 'Play Again' to restart.";
+                drawCardBtn.disabled = true;
+                return undefined;
+            }
+            return deck.pop(); // Remove and return the last card
+        }
+
+        /**
+         * Resets the visual state of the cards (flips them back to face down, clears value).
+         * Removes animation classes.
+         */
+        function resetCardVisuals() {
+            playerCardEl.classList.remove('flipped', 'animate-draw');
+            opponentCardEl.classList.remove('flipped', 'animate-draw');
+            playerCardValueEl.textContent = '';
+            opponentCardValueEl.textContent = '';
+        }
+
+        /**
+         * Handles the main game logic for drawing cards and determining the round winner.
+         */
+        async function handleDrawCard() {
+            // Disable button during animation
+            drawCardBtn.disabled = true;
+            resetCardVisuals(); // Ensure cards are reset before drawing
+
+            // Small delay before drawing to allow visual reset
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const playerCard = drawCard();
+            const opponentCard = drawCard();
+
+            if (playerCard === undefined || opponentCard === undefined) {
+                // This shouldn't happen if deck check is earlier, but good for robustness
+                gameMessageEl.textContent = "Not enough cards in the deck!";
+                drawCardBtn.disabled = true;
+                return;
+            }
+
+            // Apply animation classes
+            playerCardEl.classList.add('animate-draw');
+            opponentCardEl.classList.add('animate-draw');
+
+            // Set card values after a slight delay to allow initial animation
+            setTimeout(() => {
+                playerCardValueEl.textContent = playerCard;
+                opponentCardValueEl.textContent = opponentCard;
+
+                // Flip cards after animation
+                playerCardEl.classList.add('flipped');
+                opponentCardEl.classList.add('flipped');
+            }, 500); // This delay should match or be slightly less than the animation duration
+
+            // Wait for flip animation to complete before determining winner
+            await new Promise(resolve => setTimeout(resolve, 1100)); // 0.6s flip + 0.5s draw + buffer
+
+            determineRoundWinner(playerCard, opponentCard);
+        }
+
+        /**
+         * Determines the winner of the current round, updates scores, and checks for game winner.
+         * @param {number} pCard - Player's card value.
+         * @param {number} oCard - Opponent's card value.
+         */
+        function determineRoundWinner(pCard, oCard) {
+            let roundMessage = '';
+            if (pCard > oCard) {
+                playerScore++;
+                roundMessage = "You win this round!";
+                playerScoreEl.textContent = playerScore;
+            } else if (oCard > pCard) {
+                opponentScore++;
+                roundMessage = "Opponent wins this round!";
+                opponentScoreEl.textContent = opponentScore;
+            } else {
+                roundMessage = "It's a tie!";
+            }
+            gameMessageEl.textContent = roundMessage;
+
+            checkForGameWinner();
+        }
+
+        /**
+         * Checks if either player has reached the maximum score and declares the game winner.
+         */
+        function checkForGameWinner() {
+            if (playerScore >= maxScore) {
+                gameMessageEl.textContent = `🎉 You win the game! First to ${maxScore} wins! 🎉`;
+                endGame();
+            } else if (opponentScore >= maxScore) {
+                gameMessageEl.textContent = `😔 Opponent wins the game! First to ${maxScore} wins! 😔`;
+                endGame();
+            } else {
+                // If game not over, re-enable draw button
+                drawCardBtn.disabled = false;
+            }
+
+            // If deck runs out before a winner is decided
+            if (deck.length < 2 && playerScore < maxScore && opponentScore < maxScore) {
+                gameMessageEl.textContent = "Deck is empty! Game ended. Click 'Play Again' to restart.";
+                endGame();
+            }
+        }
+
+        /**
+         * Ends the current game session, disabling the draw button and showing play again.
+         */
+        function endGame() {
+            drawCardBtn.disabled = true;
+            drawCardBtn.classList.add('hidden');
+            playAgainBtn.classList.remove('hidden');
+        }
+
+        /**
+         * Resets all game state and visuals to start a new game.
+         */
+        function resetGame() {
+            playerScore = 0;
+            opponentScore = 0;
+            playerScoreEl.textContent = playerScore;
+            opponentScoreEl.textContent = opponentScore;
+            gameMessageEl.textContent = "Press 'Draw Card' to start!";
+            drawCardBtn.disabled = false;
+            drawCardBtn.classList.remove('hidden');
+            playAgainBtn.classList.add('hidden');
+            resetCardVisuals();
+            initializeDeck(); // Re-initialize and shuffle for a new game
+        }
+
+        // Event Listeners
+        drawCardBtn.addEventListener('click', handleDrawCard);
+        playAgainBtn.addEventListener('click', resetGame);
+
+        // Initialize game on window load
+        window.onload = function() {
+            resetGame(); // Call resetGame to set up the initial state
+        };
+    </script>
 </body>
-</html>
+  </html>
+  
