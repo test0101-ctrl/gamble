@@ -1,63 +1,148 @@
-// --- Variáveis de Jogo ---
+// --- Variáveis de Jogo (Atualizadas para mais recursos e mecânicas) ---
 const gameState = {
     generatorHealth: 100,
     generatorPower: 100,
-    resources: 0,
-    gameTime: 0,
+    resources: { // Múltiplos recursos
+        metal: 0,
+        components: 0,
+        fuel: 0
+    },
+    gameDay: 1, // Novo: Contador de dias
+    isDay: true, // Novo: Para ciclo dia/noite
     domeLevel: 0, // 0 = sem cúpula, 1 = cúpula básica
-    weapons: [], // Array de objetos de arma: { id: 1, health: 100, broken: false }
-    isMining: false,
-    mineInterval: null,
-    attackInterval: null,
+    weapons: [], // Array de objetos de arma: { id: 1, type: 'basic', health: 100, broken: false }
+    
+    // Intervalos de jogo
+    gameTickInterval: null,
     powerConsumptionInterval: null,
+    monsterAttackInterval: null,
+    dayNightCycleInterval: null,
+
     gameOver: false,
-    monsterAttackChance: 0.1, // 10% de chance de ataque por ciclo de mineração
-    domeProtection: [0, 0.5], // Níveis de proteção da cúpula (0% para nível 0, 50% para nível 1)
-    weaponDamage: 10,
-    monsterHealth: 50,
-    monsterSpawnRate: 15000, // Monstros a cada 15 segundos (aproximado)
-    monsterDamage: 20
+
+    // Dificuldade e mecânicas
+    baseMineAmount: { metal: 1, components: 1, fuel: 1 },
+    mineVariance: 3, // Recursos = base + random(0 a variance)
+    monsterSpawnChance: 0.15, // Chance base de ataque a cada "tick" de tempo
+    monsterBaseDamage: 10,
+    monsterHealthPool: 50, // Saúde total dos monstros em um ataque
+    domeProtectionMultiplier: [0, 0.4], // 0% para nível 0, 40% de redução para nível 1
+    weaponBaseDamage: 15,
+    weaponBreakChance: 0.25, // 25% de chance de uma arma quebrar por ataque
+    generatorFuelConsumption: 1, // Consumo de combustível por tick
+    powerFromFuel: 20, // Energia restaurada por 1 unidade de combustível
+    resourceCosts: {
+        domeUpgrade: { metal: 100, components: 50 },
+        addWeapon: { metal: 50, components: 20 },
+        repairDome: { metal: 20 },
+        repairWeapon: { metal: 10 }
+    }
 };
 
 // --- Referências de Elementos do DOM ---
 const generatorHealthSpan = document.getElementById('generatorHealth');
+const generatorHealthBar = document.getElementById('generatorHealthBar');
 const generatorPowerSpan = document.getElementById('generatorPower');
-const resourcesSpan = document.getElementById('resources');
-const gameTimeSpan = document.getElementById('gameTime');
-const mineButton = document.getElementById('mineButton');
+const generatorPowerBar = document.getElementById('generatorPowerBar');
+const metalResourcesSpan = document.getElementById('metalResources');
+const componentsResourcesSpan = document.getElementById('componentsResources');
+const fuelResourcesSpan = document.getElementById('fuelResources');
+const gameDaySpan = document.getElementById('gameDay');
+
+const mineMetalButton = document.getElementById('mineMetalButton');
+const mineComponentsButton = document.getElementById('mineComponentsButton');
+const mineFuelButton = document.getElementById('mineFuelButton');
+
 const repairDomeButton = document.getElementById('repairDomeButton');
 const repairWeaponsButton = document.getElementById('repairWeaponsButton');
 const upgradeDomeButton = document.getElementById('upgradeDomeButton');
 const addWeaponButton = document.getElementById('addWeaponButton');
+const fuelGeneratorButton = document.getElementById('fuelGeneratorButton');
+const researchButton = document.getElementById('researchButton'); // Botão futuro
+
 const messageLog = document.getElementById('messageLog');
 const gameOverScreen = document.getElementById('gameOverScreen');
 const restartButton = document.getElementById('restartButton');
 const weaponsContainer = document.getElementById('weaponsContainer');
+const generatorImage = document.getElementById('generatorImage');
+const domeImage = document.getElementById('domeImage');
+const generatorStatus = document.getElementById('generatorStatus');
+const domeStatus = document.getElementById('domeStatus');
+const skyElement = document.querySelector('.sky');
+
 
 // --- Funções de Utilitário ---
 function updateUI() {
+    // Atualizar barras de saúde e energia
     generatorHealthSpan.textContent = `${gameState.generatorHealth}%`;
+    generatorHealthBar.style.width = `${gameState.generatorHealth}%`;
     generatorPowerSpan.textContent = `${gameState.generatorPower}%`;
-    resourcesSpan.textContent = gameState.resources;
-    gameTimeSpan.textContent = `${gameState.gameTime}s`;
+    generatorPowerBar.style.width = `${gameState.generatorPower}%`;
 
-    // Habilitar/Desabilitar botões
-    mineButton.disabled = gameState.gameOver;
-    repairDomeButton.disabled = gameState.gameOver || gameState.domeLevel === 0 || gameState.resources < 20; // Custo de exemplo
-    repairWeaponsButton.disabled = gameState.gameOver || gameState.weapons.every(w => !w.broken) || gameState.resources < 10; // Custo de exemplo
-    upgradeDomeButton.disabled = gameState.gameOver || gameState.resources < 100 || gameState.domeLevel > 0; // Exemplo: só pode ter 1 nível
-    addWeaponButton.disabled = gameState.gameOver || gameState.resources < 50;
+    // Mudar cor da barra do gerador
+    if (gameState.generatorHealth < 30) {
+        generatorHealthBar.style.backgroundColor = 'var(--accent-red)';
+        generatorStatus.textContent = 'Crítico!';
+        generatorStatus.style.color = 'var(--accent-red)';
+        generatorImage.src = 'images/generator_critical.png';
+    } else if (gameState.generatorHealth < 60) {
+        generatorHealthBar.style.backgroundColor = 'var(--accent-orange)';
+        generatorStatus.textContent = 'Danos Leves';
+        generatorStatus.style.color = 'var(--accent-orange)';
+        generatorImage.src = 'images/generator_damaged.png';
+    } else {
+        generatorHealthBar.style.backgroundColor = 'var(--accent-green)';
+        generatorStatus.textContent = 'Normal';
+        generatorStatus.style.color = 'var(--accent-green)';
+        generatorImage.src = 'images/generator_ok.png';
+    }
+
+    // Mudar cor da barra de energia
+    if (gameState.generatorPower < 20) {
+        generatorPowerBar.style.backgroundColor = 'var(--accent-red)';
+    } else if (gameState.generatorPower < 50) {
+        generatorPowerBar.style.backgroundColor = 'var(--accent-orange)';
+    } else {
+        generatorPowerBar.style.backgroundColor = 'var(--accent-green)';
+    }
+
+    // Atualizar recursos
+    metalResourcesSpan.textContent = gameState.resources.metal;
+    componentsResourcesSpan.textContent = gameState.resources.components;
+    fuelResourcesSpan.textContent = gameState.resources.fuel;
+    gameDaySpan.textContent = gameState.gameDay;
+
+    // Habilitar/Desabilitar botões de ações
+    mineMetalButton.disabled = gameState.gameOver;
+    mineComponentsButton.disabled = gameState.gameOver;
+    mineFuelButton.disabled = gameState.gameOver;
+
+    upgradeDomeButton.disabled = gameState.gameOver || gameState.domeLevel > 0 ||
+                                 gameState.resources.metal < gameState.resourceCosts.domeUpgrade.metal ||
+                                 gameState.resources.components < gameState.resourceCosts.domeUpgrade.components;
+
+    addWeaponButton.disabled = gameState.gameOver ||
+                               gameState.resources.metal < gameState.resourceCosts.addWeapon.metal ||
+                               gameState.resources.components < gameState.resourceCosts.addWeapon.components;
+
+    repairDomeButton.disabled = gameState.gameOver || gameState.domeLevel === 0 ||
+                                 gameState.resources.metal < gameState.resourceCosts.repairDome.metal; // Supondo que a cúpula precisa de reparos visuais ou lógicos
+
+    const brokenWeapons = gameState.weapons.filter(w => w.broken).length;
+    repairWeaponsButton.disabled = gameState.gameOver || brokenWeapons === 0 ||
+                                    gameState.resources.metal < (brokenWeapons * gameState.resourceCosts.repairWeapon.metal);
+
+    fuelGeneratorButton.disabled = gameState.gameOver || gameState.resources.fuel < 1 || gameState.generatorPower >= 100;
 
     // Atualizar visual da cúpula
-    document.getElementById('domeImage').style.opacity = gameState.domeLevel > 0 ? '1' : '0.5';
-
-    // Atualizar visual do gerador (ex: cor vermelha se saúde baixa)
-    if (gameState.generatorHealth < 30) {
-        generatorHealthSpan.style.color = 'red';
-    } else if (gameState.generatorHealth < 60) {
-        generatorHealthSpan.style.color = 'orange';
-    } else {
-        generatorHealthSpan.style.color = '#f39c12';
+    if (gameState.domeLevel === 0) {
+        domeImage.src = 'images/dome_lvl0.png';
+        domeStatus.textContent = 'Nenhuma';
+        domeStatus.style.color = 'var(--accent-red)';
+    } else if (gameState.domeLevel === 1) {
+        domeImage.src = 'images/dome_lvl1.png';
+        domeStatus.textContent = 'Operacional';
+        domeStatus.style.color = 'var(--accent-green)';
     }
 
     renderWeapons();
@@ -65,30 +150,29 @@ function updateUI() {
 
 function logMessage(message, type = 'info') {
     const li = document.createElement('li');
-    li.textContent = `[${formatTime(gameState.gameTime)}] ${message}`;
+    li.textContent = `[Dia ${gameState.gameDay}] ${message}`;
     li.classList.add(`message-${type}`);
-    messageLog.prepend(li); // Adiciona as mensagens mais recentes no topo
-    if (messageLog.children.length > 20) { // Limita o número de mensagens
+    messageLog.prepend(li);
+    if (messageLog.children.length > 30) { // Limita o número de mensagens para não sobrecarregar
         messageLog.removeChild(messageLog.lastChild);
     }
 }
 
-function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
 function gameOver() {
     gameState.gameOver = true;
-    clearInterval(gameState.mineInterval);
-    clearInterval(gameState.attackInterval);
+    clearInterval(gameState.gameTickInterval);
     clearInterval(gameState.powerConsumptionInterval);
+    clearInterval(gameState.monsterAttackInterval);
+    clearInterval(gameState.dayNightCycleInterval);
     gameOverScreen.style.display = 'flex';
-    logMessage("GAME OVER! Seu gerador foi destruído.", "error");
+    logMessage("GAME OVER! Seu gerador foi destruído pelos mutantes. A Terra não perdoa.", "error");
+    // Adicionar um som de game over
+    // playSound('gameover.mp3');
 }
 
 function takeDamage(target, amount) {
+    if (gameState.gameOver) return;
+
     if (target === 'generator') {
         gameState.generatorHealth -= amount;
         if (gameState.generatorHealth <= 0) {
@@ -96,6 +180,7 @@ function takeDamage(target, amount) {
             gameOver();
         }
         logMessage(`O gerador sofreu ${amount} de dano! Saúde: ${gameState.generatorHealth}%`, "error");
+        // playSound('damage.mp3');
     }
     updateUI();
 }
@@ -106,40 +191,84 @@ function startGame() {
     // Resetar estado do jogo
     gameState.generatorHealth = 100;
     gameState.generatorPower = 100;
-    gameState.resources = 0;
-    gameState.gameTime = 0;
+    gameState.resources = { metal: 0, components: 0, fuel: 0 };
+    gameState.gameDay = 1;
+    gameState.isDay = true;
     gameState.domeLevel = 0;
     gameState.weapons = [];
-    gameState.isMining = false;
     gameState.gameOver = false;
-    gameState.monsterAttackChance = 0.1;
-    gameState.monsterHealth = 50;
+    gameState.monsterHealthPool = 50; // Resetar saúde dos monstros por ataque
     gameOverScreen.style.display = 'none';
 
     // Limpar intervalos antigos se existirem
-    clearInterval(gameState.mineInterval);
-    clearInterval(gameState.attackInterval);
+    clearInterval(gameState.gameTickInterval);
     clearInterval(gameState.powerConsumptionInterval);
+    clearInterval(gameState.monsterAttackInterval);
+    clearInterval(gameState.dayNightCycleInterval);
 
     // Iniciar intervalos
+    gameState.gameTickInterval = setInterval(gameTick, 1000); // Principal tick do jogo (1 segundo)
     gameState.powerConsumptionInterval = setInterval(consumePower, 5000); // Consome energia a cada 5 segundos
-    gameState.gameInterval = setInterval(() => { gameState.gameTime++; updateUI(); }, 1000); // Atualiza tempo de jogo a cada segundo
-    gameState.attackInterval = setInterval(trySpawnMonster, gameState.monsterSpawnRate); // Tenta spawnar monstro periodicamente
+    gameState.monsterAttackInterval = setInterval(tryTriggerMonsterAttack, 20000); // Tenta ataque de monstro a cada 20s
+    gameState.dayNightCycleInterval = setInterval(advanceDay, 60000); // A cada 60 segundos (1 minuto) um novo dia
 
-    logMessage("Bem-vindo de volta à Terra Despedaçada. Sobreviva!", "info");
+    // Define o estado inicial do céu
+    skyElement.classList.remove('night');
+    skyElement.classList.add('day'); // apenas para garantir a classe inicial
+
+    logMessage("Bem-vindo de volta à Terra Despedaçada. Sobreviva!", "game-event");
+    // playSound('start_game.mp3');
     updateUI();
 }
 
-function mineResources() {
+function gameTick() {
+    // Lógica que ocorre a cada segundo
+    // Aumenta a dificuldade com o tempo
+    if (gameState.gameDay > 5 && gameState.monsterSpawnChance < 0.3) {
+        gameState.monsterSpawnChance += 0.001; // Aumenta levemente a chance de ataque
+    }
+    if (gameState.gameDay > 10 && gameState.monsterBaseDamage < 20) {
+        gameState.monsterBaseDamage += 0.005; // Aumenta levemente o dano do monstro
+    }
+    // Lógica para dia/noite (apenas visual, a lógica de dia é por 'advanceDay')
+    // A cada 30 segundos alternamos entre dia e noite visualmente para o "molho"
+    const secondsInMinute = 60; // Duração de um dia no jogo
+    const currentSecondOfDay = gameState.gameTickInterval % secondsInMinute; // Isso não é exato, precisaria de um contador de segundos dentro do dia
+
+    // Melhorar a simulação do dia/noite
+    const totalSecondsInDay = 60; // 1 minuto de jogo equivale a 1 dia
+    const currentSecond = (Date.now() / 1000) % totalSecondsInDay; // Aproximação de tempo
+
+    if (currentSecond > totalSecondsInDay * 0.75) { // Últimos 25% do dia -> Noite
+        skyElement.classList.add('night');
+        gameState.isDay = false;
+    } else {
+        skyElement.classList.remove('night');
+        gameState.isDay = true;
+    }
+
+    updateUI();
+}
+
+function advanceDay() {
+    gameState.gameDay++;
+    logMessage(`O ${gameState.gameDay}º dia começa. As criaturas ficam mais perigosas!`, "game-event");
+    // A saúde dos monstros para o próximo ataque pode aumentar com os dias
+    gameState.monsterHealthPool += 5; // Monstros mais fortes a cada dia
+    updateUI();
+    // playSound('new_day.mp3');
+}
+
+function mineResource(type) {
     if (gameState.gameOver) return;
 
-    // Aumentar recursos
-    const minedAmount = Math.floor(Math.random() * 5) + 1; // De 1 a 5 recursos
-    gameState.resources += minedAmount;
-    logMessage(`Você minerou ${minedAmount} recursos. Total: ${gameState.resources}.`, "success");
+    let minedAmount = gameState.baseMineAmount[type] + Math.floor(Math.random() * gameState.mineVariance);
+    gameState.resources[type] += minedAmount;
+    logMessage(`Você minerou ${minedAmount} ${type}. Total: ${gameState.resources[type]}.`, "success");
+    // playSound('mining_success.mp3');
 
-    // Chance de ataque de monstro
-    if (Math.random() < gameState.monsterAttackChance) {
+    // Chance de ataque de monstro (agora independente para cada ação de mineração)
+    if (Math.random() < gameState.monsterSpawnChance) {
         logMessage("Criaturas mutantes apareceram e estão atacando o gerador!", "warning");
         handleMonsterAttack();
     }
@@ -149,126 +278,159 @@ function mineResources() {
 function consumePower() {
     if (gameState.gameOver) return;
 
-    let consumption = 1; // Consumo base
+    let consumption = gameState.generatorFuelConsumption; // Consumo base de combustível/energia
     if (gameState.domeLevel > 0) consumption += 0.5; // Cúpula consome mais
     consumption += gameState.weapons.length * 0.2; // Armas consomem mais
 
-    gameState.generatorPower -= consumption;
-
-    if (gameState.generatorPower <= 0) {
-        gameState.generatorPower = 0;
-        takeDamage('generator', 5); // Gerador começa a sofrer dano se sem energia
-        logMessage("O gerador está sem energia e sofrendo dano!", "error");
-    } else if (gameState.generatorPower < 20) {
-        logMessage("A energia do gerador está baixa!", "warning");
+    if (gameState.resources.fuel >= consumption) {
+        gameState.resources.fuel = Math.max(0, gameState.resources.fuel - consumption); // Garante que não vá abaixo de zero
+        gameState.generatorPower = Math.min(100, gameState.generatorPower + (consumption * 2)); // Combustível gera energia
+    } else {
+        // Se não tiver combustível, o gerador perde energia
+        gameState.generatorPower -= (consumption * 5); // Perde mais energia sem combustível
+        if (gameState.generatorPower <= 0) {
+            gameState.generatorPower = 0;
+            takeDamage('generator', 10); // Gerador começa a sofrer dano se sem energia
+            logMessage("O gerador está sem energia e sofrendo dano grave!", "error");
+            // playSound('generator_warning.mp3');
+        } else if (gameState.generatorPower < 30) {
+            logMessage("A energia do gerador está criticamente baixa! Abasteça-o.", "warning");
+        }
     }
     updateUI();
 }
 
-function handleMonsterAttack() {
-    let damageToGenerator = gameState.monsterDamage;
+function fuelGenerator() {
+    const fuelNeeded = 1; // Unidades de combustível por abastecimento
+    if (gameState.resources.fuel >= fuelNeeded && gameState.generatorPower < 100) {
+        gameState.resources.fuel -= fuelNeeded;
+        gameState.generatorPower = Math.min(100, gameState.generatorPower + gameState.powerFromFuel);
+        logMessage(`Gerador abastecido! Energia: ${gameState.generatorPower}%`, "info");
+        // playSound('fuel_up.mp3');
+    } else if (gameState.generatorPower >= 100) {
+        logMessage("A energia do gerador já está no máximo.", "info");
+    } else {
+        logMessage("Não há combustível suficiente para abastecer o gerador.", "error");
+    }
+    updateUI();
+}
 
-    // Aplicar proteção da cúpula
+
+function tryTriggerMonsterAttack() {
+    if (gameState.gameOver) return;
+    // Esta função é para ataques periódicos, independentes da mineração
+    if (Math.random() < (gameState.monsterSpawnChance * 1.5)) { // Maior chance para ataques periódicos
+        logMessage("Um enxame de mutantes está se aproximando da sua base!", "game-event");
+        handleMonsterAttack();
+    }
+}
+
+function handleMonsterAttack() {
+    let currentMonsterHealth = gameState.monsterHealthPool; // Saúde dos monstros para este ataque
+    let damageToGenerator = gameState.monsterBaseDamage;
+
+    // Defesa da cúpula
     if (gameState.domeLevel > 0) {
-        damageToGenerator *= (1 - gameState.domeProtection[gameState.domeLevel]);
-        logMessage(`A cúpula absorveu parte do ataque!`, "info");
+        damageToGenerator *= (1 - gameState.domeProtectionMultiplier[gameState.domeLevel]);
+        logMessage(`A cúpula absorveu ${Math.round(gameState.monsterBaseDamage * gameState.domeProtectionMultiplier[gameState.domeLevel])} de dano!`, "info");
     }
 
     // Ataque das armas
     let totalWeaponDamage = 0;
     let activeWeapons = gameState.weapons.filter(w => !w.broken);
     activeWeapons.forEach(weapon => {
-        totalWeaponDamage += gameState.weaponDamage;
+        totalWeaponDamage += gameState.weaponBaseDamage;
         // Chance da arma quebrar
-        if (Math.random() < 0.2) { // 20% de chance de quebrar por ataque
+        if (Math.random() < gameState.weaponBreakChance) {
             weapon.broken = true;
-            logMessage(`Uma de suas armas quebrou! Precisa de reparos.`, "warning");
+            logMessage(`Uma de suas armas (Arma ${weapon.id}) quebrou e precisa de reparos!`, "warning");
+            // playSound('weapon_break.mp3');
         }
     });
 
-    gameState.monsterHealth -= totalWeaponDamage;
-    logMessage(`Suas armas causaram ${totalWeaponDamage} de dano aos monstros!`, "info");
+    currentMonsterHealth -= totalWeaponDamage;
+    logMessage(`Suas armas causaram ${totalWeaponDamage} de dano aos mutantes!`, "info");
 
-    if (gameState.monsterHealth <= 0) {
-        logMessage("Os monstros foram derrotados!", "success");
-        gameState.monsterHealth = 50; // Resetar saúde do monstro para o próximo ataque
+    if (currentMonsterHealth <= 0) {
+        logMessage("Os mutantes foram derrotados com sucesso! A base está segura.", "success");
+        // playSound('monsters_defeated.mp3');
+        // Resetar a saúde dos monstros para o próximo ataque, mas pode aumentar com a dificuldade
+        gameState.monsterHealthPool = 50 + (gameState.gameDay * 5); // Fica mais difícil
         return; // Monstros derrotados, sem dano ao gerador
     }
 
+    // Se os monstros não foram derrotados, o gerador leva dano
     takeDamage('generator', Math.round(damageToGenerator));
+    logMessage("Os mutantes conseguiram causar dano ao gerador!", "error");
+    // playSound('monster_hit_generator.mp3');
 }
-
-function trySpawnMonster() {
-    // Apenas para simular, o spawn real é no mineResources
-    // Esta função pode ser usada para ataques independentes da mineração
-    if (gameState.gameOver) return;
-
-    if (Math.random() < 0.3) { // Chance de ataque independente da mineração
-        logMessage("Um grupo de mutantes selvagens se aproxima da sua base!", "warning");
-        handleMonsterAttack();
-    }
-}
-
 
 function upgradeDome() {
-    const cost = 100;
-    if (gameState.resources >= cost && gameState.domeLevel === 0) {
-        gameState.resources -= cost;
+    const cost = gameState.resourceCosts.domeUpgrade;
+    if (gameState.resources.metal >= cost.metal && gameState.resources.components >= cost.components && gameState.domeLevel === 0) {
+        gameState.resources.metal -= cost.metal;
+        gameState.resources.components -= cost.components;
         gameState.domeLevel = 1;
         logMessage("Cúpula de proteção construída! O gerador está mais seguro.", "success");
+        // playSound('build_dome.mp3');
     } else if (gameState.domeLevel > 0) {
-        logMessage("Você já possui uma cúpula!", "warning");
+        logMessage("Você já possui uma cúpula. Considere melhorias futuras.", "info");
     } else {
-        logMessage("Recursos insuficientes para construir a cúpula (precisa de 100).", "error");
+        logMessage(`Recursos insuficientes para construir a cúpula. Precisa de ${cost.metal} Metal e ${cost.components} Componentes.`, "error");
+        // playSound('error_sound.mp3');
     }
     updateUI();
 }
 
 function repairDome() {
-    const cost = 20; // Custo de reparo da cúpula
-    if (gameState.domeLevel > 0 && gameState.resources >= cost) {
-        // Por simplicidade, assume-se que a cúpula não tem "vida" e está sempre ativa se "construída"
-        // Em um jogo mais complexo, a cúpula teria sua própria barra de vida.
-        // Aqui, reparamos a "deterioração" imaginária ou a capacidade da cúpula.
-        gameState.resources -= cost;
-        logMessage("Cúpula reparada e funcionando perfeitamente.", "success");
+    const cost = gameState.resourceCosts.repairDome;
+    // Em um jogo real, a cúpula teria saúde e você repararia ela.
+    // Aqui, vamos apenas adicionar uma condição de que "a cúpula precisa de reparos"
+    // e o botão só habilita se você tiver uma cúpula e recursos.
+    if (gameState.domeLevel > 0 && gameState.resources.metal >= cost.metal) {
+        gameState.resources.metal -= cost.metal;
+        logMessage("Cúpula reparada e funcionando perfeitamente. Sua integridade foi restaurada.", "success");
+        // playSound('repair_sound.mp3');
     } else if (gameState.domeLevel === 0) {
         logMessage("Você não possui uma cúpula para reparar.", "warning");
     } else {
-        logMessage("Recursos insuficientes para reparar a cúpula (precisa de 20).", "error");
+        logMessage(`Recursos insuficientes para reparar a cúpula (precisa de ${cost.metal} Metal).`, "error");
     }
     updateUI();
 }
 
-
 let nextWeaponId = 1;
 function addWeapon() {
-    const cost = 50;
-    if (gameState.resources >= cost) {
-        gameState.resources -= cost;
-        gameState.weapons.push({ id: nextWeaponId++, health: 100, broken: false });
-        logMessage("Nova arma automática adicionada à defesa da base!", "success");
+    const cost = gameState.resourceCosts.addWeapon;
+    if (gameState.resources.metal >= cost.metal && gameState.resources.components >= cost.components) {
+        gameState.resources.metal -= cost.metal;
+        gameState.resources.components -= cost.components;
+        gameState.weapons.push({ id: nextWeaponId++, type: 'basic', health: 100, broken: false });
+        logMessage(`Nova arma automática (Arma ${nextWeaponId - 1}) adicionada à defesa da base!`, "success");
+        // playSound('build_weapon.mp3');
     } else {
-        logMessage("Recursos insuficientes para adicionar uma arma (precisa de 50).", "error");
+        logMessage(`Recursos insuficientes para adicionar uma arma. Precisa de ${cost.metal} Metal e ${cost.components} Componentes.`, "error");
+        // playSound('error_sound.mp3');
     }
     updateUI();
 }
 
 function repairWeapons() {
-    const costPerWeapon = 10;
     const brokenWeapons = gameState.weapons.filter(w => w.broken);
     if (brokenWeapons.length === 0) {
         logMessage("Nenhuma arma quebrada para reparar.", "info");
         return;
     }
 
-    const totalCost = brokenWeapons.length * costPerWeapon;
-    if (gameState.resources >= totalCost) {
-        gameState.resources -= totalCost;
+    const totalCost = brokenWeapons.length * gameState.resourceCosts.repairWeapon.metal;
+    if (gameState.resources.metal >= totalCost) {
+        gameState.resources.metal -= totalCost;
         brokenWeapons.forEach(w => w.broken = false);
         logMessage(`Todas as ${brokenWeapons.length} armas quebradas foram reparadas!`, "success");
+        // playSound('repair_sound.mp3');
     } else {
-        logMessage(`Recursos insuficientes para reparar todas as armas (precisa de ${totalCost}).`, "error");
+        logMessage(`Recursos insuficientes para reparar todas as armas (precisa de ${totalCost} Metal).`, "error");
+        // playSound('error_sound.mp3');
     }
     updateUI();
 }
@@ -279,26 +441,4 @@ function renderWeapons() {
         const weaponDiv = document.createElement('div');
         weaponDiv.classList.add('weapon');
         if (weapon.broken) {
-            weaponDiv.classList.add('broken');
-        }
-        weaponDiv.innerHTML = `
-            <img src="images/${weapon.broken ? 'weapon_broken.png' : 'weapon_ok.png'}" alt="Weapon">
-            <p>Arma ${weapon.id}</p>
-            ${weapon.broken ? '<p>QUEBRADA!</p>' : ''}
-        `;
-        weaponsContainer.appendChild(weaponDiv);
-    });
-}
-
-
-// --- Event Listeners ---
-mineButton.addEventListener('click', mineResources);
-upgradeDomeButton.addEventListener('click', upgradeDome);
-addWeaponButton.addEventListener('click', addWeapon);
-repairDomeButton.addEventListener('click', repairDome);
-repairWeaponsButton.addEventListener('click', repairWeapons);
-restartButton.addEventListener('click', startGame);
-
-
-// --- Inicialização do Jogo ---
-startGame();
+            weaponDiv.
