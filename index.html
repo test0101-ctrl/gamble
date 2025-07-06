@@ -3,76 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Last Survivor: Terra Despedaçada</title>
+    <title>Last Survivor: O Gerador</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="game-container">
-        <div class="sky"></div> <h1 class="game-title">Last Survivor: Terra Despedaçada</h1>
+        <h1>Last Survivor: O Gerador</h1>
 
-        <div class="header-bar">
-            <div class="status-group">
-                <label>Dia:</label><span id="gameDay">1</span>
-            </div>
-            <div class="status-group">
-                <label>Gerador:</label>
-                <div class="health-bar-container">
-                    <div id="generatorHealthBar" class="health-bar"></div>
-                    <span id="generatorHealth">100%</span>
-                </div>
-            </div>
-            <div class="status-group">
-                <label>Energia:</label>
-                <div class="power-bar-container">
-                    <div id="generatorPowerBar" class="power-bar"></div>
-                    <span id="generatorPower">100%</span>
-                </div>
-            </div>
+        <div class="status-panel">
+            <p>Dia: <span id="gameDay">1</span></p>
+            <p>Gerador: <span id="generatorHealth">100%</span></p>
+            <p>Energia: <span id="generatorPower">100%</span></p>
+            <p>Recursos (Metal): <span id="resources">0</span></p>
         </div>
 
-        <div class="resources-display">
-            <h2>Recursos</h2>
-            <div class="resource-item">
-                <img src="images/metal.png" alt="Metal"><p><span id="metalResources">0</span> Metal</p>
-            </div>
-            <div class="resource-item">
-                <img src="images/components.png" alt="Componentes"><p><span id="componentsResources">0</span> Componentes</p>
-            </div>
-            <div class="resource-item">
-                <img src="images/fuel.png" alt="Combustível"><p><span id="fuelResources">0</span> Combustível</p>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="actions-panel">
+        <div class="main-game-area">
+            <div class="actions">
                 <h2>Ações</h2>
-                <button id="mineMetalButton" class="action-button">Minar Metal</button>
-                <button id="mineComponentsButton" class="action-button">Buscar Componentes</button>
-                <button id="mineFuelButton" class="action-button">Coletar Combustível</button>
+                <button id="mineButton">Minar Metal (Rápido)</button>
+                <button id="collectFuelButton">Coletar Combustível</button>
 
-                <h3>Construção & Reparos</h3>
-                <button id="upgradeDomeButton" class="action-button build-button">Construir Cúpula (100M, 50C)</button>
-                <button id="addWeaponButton" class="action-button build-button">Construir Arma (50M, 20C)</button>
-                <button id="repairDomeButton" class="action-button repair-button" disabled>Reparar Cúpula (20M)</button>
-                <button id="repairWeaponsButton" class="action-button repair-button" disabled>Reparar Armas (10M/arma)</button>
-                <button id="fuelGeneratorButton" class="action-button fuel-button" disabled>Abastecer Gerador (10F)</button>
-
-                <h3>Pesquisa & Melhorias</h3>
-                <button id="researchButton" class="action-button" disabled>Pesquisar (Em breve...)</button>
+                <h3>Construções & Reparos</h3>
+                <button id="upgradeDomeButton">Construir Cúpula (100 Metal)</button>
+                <button id="addWeaponButton">Construir Arma (50 Metal)</button>
+                <button id="repairDomeButton" disabled>Reparar Cúpula (20 Metal)</button>
+                <button id="repairWeaponsButton" disabled>Reparar Armas (10 Metal/arma)</button>
+                <button id="fuelGeneratorButton" disabled>Abastecer Gerador (1 Combustível)</button>
             </div>
 
-            <div class="base-view">
-                <div class="generator-area">
-                    <img src="images/generator_ok.png" alt="Gerador de Energia" id="generatorImage" class="game-object">
-                    <p class="object-status">Estado: <span id="generatorStatus">Normal</span></p>
+            <div class="base-elements">
+                <div class="element-box">
+                    <h3>Gerador</h3>
+                    <img src="images/generator_ok.png" alt="Gerador" id="generatorImage" class="game-object">
+                    <p>Estado: <span id="generatorStatus">Normal</span></p>
                 </div>
-                <div class="dome-area">
-                    <img src="images/dome_lvl0.png" alt="Cúpula de Proteção" id="domeImage" class="game-object">
-                    <p class="object-status">Cúpula: <span id="domeStatus">Nenhuma</span></p>
+                <div class="element-box">
+                    <h3>Cúpula</h3>
+                    <img src="images/dome_lvl0.png" alt="Cúpula" id="domeImage" class="game-object">
+                    <p>Status: <span id="domeStatus">Nenhuma</span></p>
                 </div>
-                <div class="weapons-area">
-                    <h3>Defesas</h3>
+                <div class="element-box weapons-area">
+                    <h3>Defesas (Armas)</h3>
                     <div id="weaponsContainer" class="weapons-grid">
                         </div>
                 </div>
@@ -87,7 +59,7 @@
 
         <div id="gameOverScreen" class="game-over-screen">
             <h2>FIM DE JOGO!</h2>
-            <p>Seu gerador foi destruído pelos mutantes.</p>
+            <p>Seu gerador foi destruído. A Terra não perdoa.</p>
             <button id="restartButton">Reiniciar Aventura</button>
         </div>
 
@@ -95,4 +67,4 @@
 
     <script src="script.js"></script>
 </body>
-                </html>
+</html>
