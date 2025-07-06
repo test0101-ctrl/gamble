@@ -3,94 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Last Survivor: Gerador Pós-Apocalíptico</title>
+    <title>The Vault: Diários da Sobrevivência</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="game-container">
-        <div class="sky"></div> <h1 class="game-title">Last Survivor: Gerador Pós-Apocalíptico</h1>
+        <h1 class="game-title">The Vault: Diários da Sobrevivência</h1>
 
-        <div class="header-bar">
+        <div class="header-status">
             <div class="status-group">
                 <label>Dia:</label><span id="gameDay">1</span>
             </div>
             <div class="status-group">
+                <label>População:</label><span id="population">3</span>/<span id="maxPopulation">5</span>
+            </div>
+            <div class="status-group">
+                <label>Moral:</label><span id="shelterMoral" class="status-value">100%</span>
+            </div>
+            <div class="status-group">
                 <label>Gerador:</label>
-                <div class="health-bar-container">
+                <div class="bar-container generator-bar-container">
                     <div id="generatorHealthBar" class="health-bar"></div>
                     <span id="generatorHealth">100%</span>
                 </div>
             </div>
-            <div class="status-group">
-                <label>Energia:</label>
-                <div class="power-bar-container">
-                    <div id="generatorPowerBar" class="power-bar"></div>
-                    <span id="generatorPower">100%</span>
+        </div>
+
+        <div class="resource-panel">
+            <h2>Recursos do Abrigo</h2>
+            <div class="resource-display">
+                <div class="resource-item">
+                    <img src="images/food.png" alt="Comida"><p><span id="foodResources">50</span> Comida</p>
+                </div>
+                <div class="resource-item">
+                    <img src="images/water.png" alt="Água"><p><span id="waterResources">50</span> Água</p>
+                </div>
+                <div class="resource-item">
+                    <img src="images/scrap.png" alt="Sucata"><p><span id="scrapResources">0</span> Sucata</p>
+                </div>
+                <div class="resource-item">
+                    <img src="images/energy_icon.png" alt="Energia"><p><span id="energyResources">0</span> Energia</p>
                 </div>
             </div>
         </div>
 
-        <div class="resources-display">
-            <h2>Recursos Essenciais</h2>
-            <div class="resource-item">
-                <img src="images/metal.png" alt="Metal"><p><span id="metalResources">0</span> Metal</p>
-            </div>
-            <div class="resource-item">
-                <img src="images/fuel.png" alt="Combustível"><p><span id="fuelResources">0</span> Combustível</p>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="actions-panel">
-                <h2>Ações do Sobrevivente</h2>
-                <button id="mineMetalButton" class="action-button">Minar Metal</button>
-                <button id="collectFuelButton" class="action-button">Coletar Combustível</button>
-
-                <h3>Construção & Reparos</h3>
-                <button id="upgradeDomeButton" class="action-button build-button">Construir Cúpula (100M)</button>
-                <button id="addWeaponButton" class="action-button build-button">Construir Arma (50M)</button>
-                <button id="repairDomeButton" class="action-button repair-button" disabled>Reparar Cúpula (20M)</button>
-                <button id="repairWeaponsButton" class="action-button repair-button" disabled>Reparar Armas (10M/arma)</button>
-                <button id="fuelGeneratorButton" class="action-button fuel-button" disabled>Abastecer Gerador (10C)</button>
-            </div>
-
-            <div class="base-view">
-                <h2>Sua Base</h2>
-                <div class="base-structure">
-                    <div class="generator-area">
-                        <h3>Gerador Central</h3>
-                        <img src="images/generator_ok.png" alt="Gerador de Energia" id="generatorImage" class="game-object">
-                        <p class="object-status">Estado: <span id="generatorStatus">Normal</span></p>
-                    </div>
-                    <div class="dome-area">
-                        <h3>Cúpula de Proteção</h3>
-                        <img src="images/dome_lvl0.png" alt="Cúpula de Proteção" id="domeImage" class="game-object">
-                        <p class="object-status">Status: <span id="domeStatus">Nenhuma</span></p>
-                    </div>
-                </div>
-                <div class="weapons-area">
-                    <h3>Defesas Ativas</h3>
-                    <div id="weaponsContainer" class="weapons-grid">
+        <div class="main-layout">
+            <div class="left-panel">
+                <div class="survivors-panel">
+                    <h2>Sobreviventes (<span id="currentSurvivorsCount">0</span>)</h2>
+                    <div id="survivorsList" class="survivors-grid">
                         </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="message-log-container">
-            <h2>Registro de Eventos</h2>
-            <ul id="messageLog">
-                </ul>
+                <div class="building-panel">
+                    <h2>Construções & Melhorias</h2>
+                    <button id="expandShelterButton" class="action-button build-button">Expandir Abrigo (100 Sucata)</button>
+                    <button id="buildFarmButton" class="action-button build-button">Construir Horta (50 Sucata)</button>
+                    <button id="buildWaterPurifierButton" class="action-button build-button">Construir Purificador (50 Sucata)</button>
+                    <button id="upgradeGeneratorButton" class="action-button build-button">Melhorar Gerador (75 Sucata)</button>
+                    <button id="repairGeneratorButton" class="action-button repair-button" disabled>Reparar Gerador (20 Sucata)</button>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="exploration-panel">
+                    <h2>Missões de Exploração</h2>
+                    <p>Envie sobreviventes para o mundo exterior em busca de recursos.</p>
+                    <button id="sendExpeditionButton" class="action-button explore-button" disabled>Enviar Expedição (Requer 1 Sobrevivente)</button>
+                    <div id="expeditionStatus" class="expedition-info">
+                        </div>
+                </div>
+
+                <div class="event-log-container">
+                    <h2>Diário de Eventos</h2>
+                    <ul id="eventLog">
+                        </ul>
+                </div>
+            </div>
         </div>
 
         <div id="gameOverScreen" class="game-over-screen">
-            <h2>FIM DE JOGO!</h2>
-            <p>Seu gerador foi destruído pelos mutantes. A sua jornada terminou.</p>
-            <button id="restartButton">Reiniciar Aventura</button>
+            <h2>O Fim da Esperança!</h2>
+            <p>Seu abrigo não suportou. A luz do gerador se apagou pela última vez...</p>
+            <button id="restartButton">Recomeçar</button>
         </div>
 
     </div>
 
     <script src="script.js"></script>
 </body>
-    </html>
+                        </html>
