@@ -5,56 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Last Survivor: Terra Despedaçada</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="game-container">
-        <h1>Last Survivor: Terra Despedaçada</h1>
+        <div class="sky"></div> <h1 class="game-title">Last Survivor: Terra Despedaçada</h1>
 
-        <div class="game-status">
-            <p>Gerador: <span id="generatorHealth">100%</span></p>
-            <p>Energia: <span id="generatorPower">100%</span></p>
-            <p>Recursos: <span id="resources">0</span></p>
-            <p>Tempo de Jogo: <span id="gameTime">0s</span></p>
-        </div>
-
-        <div class="actions">
-            <button id="mineButton">Minar Recursos</button>
-            <button id="repairDomeButton" disabled>Reparar Cúpula</button>
-            <button id="repairWeaponsButton" disabled>Reparar Armas</button>
-            <button id="upgradeDomeButton">Melhorar Cúpula (100 Recursos)</button>
-            <button id="addWeaponButton">Adicionar Arma (50 Recursos)</button>
-        </div>
-
-        <div class="base-area">
-            <div class="generator">
-                <h2>Gerador de Energia</h2>
-                <img src="images/generator.png" alt="Gerador de Energia" id="generatorImage">
+        <div class="header-bar">
+            <div class="status-group">
+                <label>Dia:</label><span id="gameDay">1</span>
             </div>
-            <div class="dome">
-                <h2>Cúpula</h2>
-                <img src="images/dome.png" alt="Cúpula de Proteção" id="domeImage">
+            <div class="status-group">
+                <label>Gerador:</label>
+                <div class="health-bar-container">
+                    <div id="generatorHealthBar" class="health-bar"></div>
+                    <span id="generatorHealth">100%</span>
+                </div>
             </div>
-            <div class="weapons-area">
-                <h2>Armas</h2>
-                <div id="weaponsContainer" class="weapons-container">
-                    </div>
+            <div class="status-group">
+                <label>Energia:</label>
+                <div class="power-bar-container">
+                    <div id="generatorPowerBar" class="power-bar"></div>
+                    <span id="generatorPower">100%</span>
+                </div>
             </div>
         </div>
 
-        <div class="messages">
-            <h2>Alertas e Mensagens</h2>
+        <div class="resources-display">
+            <h2>Recursos</h2>
+            <div class="resource-item">
+                <img src="images/metal.png" alt="Metal"><p><span id="metalResources">0</span> Metal</p>
+            </div>
+            <div class="resource-item">
+                <img src="images/components.png" alt="Componentes"><p><span id="componentsResources">0</span> Componentes</p>
+            </div>
+            <div class="resource-item">
+                <img src="images/fuel.png" alt="Combustível"><p><span id="fuelResources">0</span> Combustível</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="actions-panel">
+                <h2>Ações</h2>
+                <button id="mineMetalButton" class="action-button">Minar Metal</button>
+                <button id="mineComponentsButton" class="action-button">Buscar Componentes</button>
+                <button id="mineFuelButton" class="action-button">Coletar Combustível</button>
+
+                <h3>Construção & Reparos</h3>
+                <button id="upgradeDomeButton" class="action-button build-button">Construir Cúpula (100M, 50C)</button>
+                <button id="addWeaponButton" class="action-button build-button">Construir Arma (50M, 20C)</button>
+                <button id="repairDomeButton" class="action-button repair-button" disabled>Reparar Cúpula (20M)</button>
+                <button id="repairWeaponsButton" class="action-button repair-button" disabled>Reparar Armas (10M/arma)</button>
+                <button id="fuelGeneratorButton" class="action-button fuel-button" disabled>Abastecer Gerador (10F)</button>
+
+                <h3>Pesquisa & Melhorias</h3>
+                <button id="researchButton" class="action-button" disabled>Pesquisar (Em breve...)</button>
+            </div>
+
+            <div class="base-view">
+                <div class="generator-area">
+                    <img src="images/generator_ok.png" alt="Gerador de Energia" id="generatorImage" class="game-object">
+                    <p class="object-status">Estado: <span id="generatorStatus">Normal</span></p>
+                </div>
+                <div class="dome-area">
+                    <img src="images/dome_lvl0.png" alt="Cúpula de Proteção" id="domeImage" class="game-object">
+                    <p class="object-status">Cúpula: <span id="domeStatus">Nenhuma</span></p>
+                </div>
+                <div class="weapons-area">
+                    <h3>Defesas</h3>
+                    <div id="weaponsContainer" class="weapons-grid">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="message-log-container">
+            <h2>Registro de Eventos</h2>
             <ul id="messageLog">
                 </ul>
         </div>
 
         <div id="gameOverScreen" class="game-over-screen">
             <h2>FIM DE JOGO!</h2>
-            <p>Seu gerador foi destruído.</p>
-            <button id="restartButton">Reiniciar Jogo</button>
+            <p>Seu gerador foi destruído pelos mutantes.</p>
+            <button id="restartButton">Reiniciar Aventura</button>
         </div>
 
     </div>
 
     <script src="script.js"></script>
 </body>
-</html>
+                </html>
