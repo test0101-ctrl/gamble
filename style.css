@@ -1,268 +1,214 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 :root {
-    --bg-main: #2c3e50; /* Azul escuro principal */
-    --panel-bg: #34495e; /* Azul médio para painéis */
-    --text-color: #ecf0f1; /* Cor de texto padrão */
-    --accent-yellow: #f1c40f; /* Destaque amarelo */
-    --accent-green: #2ecc71; /* Verde para sucesso/ações */
-    --accent-red: #e74c3c; /* Vermelho para perigo/erros */
-    --accent-orange: #e67e22; /* Laranja para avisos/energia baixa */
-    --button-default: #3498db; /* Azul para botões padrão */
-    --button-build: #27ae60; /* Verde para construção */
-    --button-repair: #9b59b6; /* Roxo para reparo */
-    --button-fuel: #f39c12; /* Laranja para combustível */
+    --bg-dark: #1a1a2e;
+    --panel-bg: #2a2a4a;
+    --text-light: #e0e0e0;
+    --accent-yellow: #f1c40f;
+    --accent-green: #2ecc71;
+    --accent-red: #e74c3c;
+    --button-primary: #3498db;
+    --button-upgrade: #27ae60;
+    --button-repair: #9b59b6;
 }
 
 body {
     font-family: 'Press Start 2P', cursive;
-    background-color: var(--bg-main);
-    color: var(--text-color);
+    background-color: var(--bg-dark);
+    color: var(--text-light);
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Alinhar ao topo */
+    align-items: center;
     min-height: 100vh;
     margin: 0;
-    padding: 20px;
+    padding: 15px;
     box-sizing: border-box;
     overflow-x: hidden;
 }
 
 .game-container {
     background-color: var(--panel-bg);
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.6);
     padding: 25px;
     width: 95%;
-    max-width: 900px;
+    max-width: 600px;
     text-align: center;
-    border: 2px solid #5d6d7e; /* Borda mais discreta */
+    border: 3px solid var(--accent-yellow);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 h1 {
     color: var(--accent-yellow);
-    margin-bottom: 20px;
-    font-size: 2em;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    margin: 0 0 15px 0;
+    font-size: 1.8em;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
 }
 
-h2, h3 {
-    color: var(--accent-yellow);
-    margin-top: 20px;
-    margin-bottom: 15px;
-    font-size: 1.1em;
-}
-
-/* Painel de Status */
-.status-panel {
-    background-color: var(--bg-main);
-    padding: 15px;
+.header-status, .threat-area {
+    background-color: var(--bg-dark);
+    padding: 10px 15px;
     border-radius: 8px;
-    margin-bottom: 25px;
+    border: 1px solid var(--panel-bg);
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    border: 1px solid #7f8c8d;
-}
-
-.status-panel p {
-    margin: 5px 10px;
-    font-size: 1em;
-}
-
-.status-panel span {
-    font-weight: bold;
-    color: var(--accent-green);
-}
-#generatorHealth, #generatorPower { color: var(--accent-yellow); }
-#generatorHealth.low { color: var(--accent-red); }
-#generatorPower.low { color: var(--accent-orange); }
-
-
-/* Área Principal do Jogo (Ações e Elementos da Base) */
-.main-game-area {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 25px;
-    justify-content: center;
-    margin-bottom: 25px;
-}
-
-.actions, .base-elements {
-    background-color: var(--bg-main);
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #7f8c8d;
-    flex: 1; /* Permite que cresçam */
-    min-width: 300px; /* Largura mínima */
-}
-
-.actions {
-    display: flex;
-    flex-direction: column;
     gap: 10px;
 }
 
-/* Botões */
-button {
-    background-color: var(--button-default);
+.header-status p, .threat-area p {
+    margin: 0;
+    font-size: 0.9em;
+}
+
+.status-value {
+    color: var(--accent-green);
+    font-weight: bold;
+}
+#generatorHealth.critical { color: var(--accent-red); }
+#generatorHealth.damaged { color: var(--accent-yellow); }
+
+
+/* Botão Principal de Mineração */
+.main-action-area {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.big-button {
+    background-color: var(--button-primary);
     color: white;
     border: none;
-    padding: 12px 15px;
-    border-radius: 5px;
-    font-size: 0.9em;
+    padding: 20px 30px;
+    border-radius: 10px;
+    font-size: 1.5em;
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.1s ease;
     font-family: 'Press Start 2P', cursive;
     text-transform: uppercase;
-    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+    box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 400px;
 }
 
-button:hover:not(:disabled) {
-    background-color: #5dade2; /* Tom mais claro */
-    transform: translateY(-1px);
+.big-button:hover:not(:disabled) {
+    background-color: #5dade2;
+    transform: translateY(-2px);
 }
 
-button:active:not(:disabled) {
-    transform: translateY(1px);
-    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
+.big-button:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
 }
 
-button:disabled {
+.big-button:disabled {
     background-color: #7f8c8d;
     color: #bdc3c7;
     cursor: not-allowed;
     box-shadow: none;
 }
 
-/* Cores específicas para botões */
-#mineButton, #collectFuelButton { background-color: var(--button-default); }
-#upgradeDomeButton, #addWeaponButton { background-color: var(--button-build); }
-#repairDomeButton, #repairWeaponsButton { background-color: var(--button-repair); }
-#fuelGeneratorButton { background-color: var(--button-fuel); }
-
-
-/* Elementos da Base (Gerador, Cúpula, Armas) */
-.base-elements {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: center;
-    align-content: flex-start; /* Alinha o conteúdo ao topo */
+.mine-rate, .idle-rate {
+    font-size: 0.85em;
+    color: var(--text-light);
 }
-
-.element-box {
-    background-color: #3f5161; /* Tom um pouco mais claro que o painel */
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #5d6d7e;
-    min-width: 150px;
-    flex: 1; /* Para que ocupem espaço */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-}
-
-.game-object {
-    max-width: 90%;
-    height: auto;
-    margin-top: 10px;
-    border-radius: 3px;
-    border: 2px solid var(--accent-yellow); /* Borda padrão */
-}
-
-/* Status do objeto */
-.element-box p {
-    font-size: 0.9em;
-    margin: 5px 0 0 0;
-}
-.element-box span {
+.mine-rate span, .idle-rate span {
+    color: var(--accent-yellow);
     font-weight: bold;
-    color: var(--accent-green);
-}
-#generatorStatus.low { color: var(--accent-red); }
-#generatorStatus.medium { color: var(--accent-orange); }
-
-
-/* Armas */
-.weapons-area {
-    width: 100%; /* Ocupa toda a largura da base-elements */
-    margin-top: 10px;
 }
 
-.weapons-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.weapon {
-    background-color: #4a5d6e; /* Fundo ligeiramente diferente para armas */
-    border: 1px solid #7f8c8d;
-    padding: 5px;
-    border-radius: 5px;
-    font-size: 0.75em;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    height: 100px; /* Altura fixa */
-    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.weapon img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 3px;
-    border: 1px solid #c0392b;
-}
-
-.weapon.broken {
-    border-color: var(--accent-red);
-    opacity: 0.7;
-    background-color: #614d54; /* Tom avermelhado para quebrada */
-}
-
-.weapon p { margin: 2px 0; }
-.weapon .status-ok { color: var(--accent-green); }
-.weapon .status-broken { color: var(--accent-red); font-weight: bold; }
-
-
-/* Registro de Mensagens */
-.message-log-container {
-    background-color: var(--bg-main);
+/* Área de Upgrades */
+.upgrade-area {
+    background-color: var(--bg-dark);
     padding: 15px;
     border-radius: 8px;
-    text-align: left;
-    margin-top: 25px;
-    border: 1px solid #7f8c8d;
+    border: 1px solid var(--panel-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.upgrade-area h2 {
+    color: var(--accent-yellow);
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.upgrade-button {
+    background-color: var(--button-upgrade);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    font-family: 'Press Start 2P', cursive;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+    width: 100%; /* Ocupa a largura total do painel */
+}
+
+.upgrade-button:hover:not(:disabled) {
+    background-color: #2ecc71;
+    transform: translateY(-1px);
+}
+
+.upgrade-button:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
+}
+
+.upgrade-button:disabled {
+    background-color: #7f8c8d;
+    color: #bdc3c7;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.repair-button {
+    background-color: var(--button-repair);
+}
+.repair-button:hover:not(:disabled) {
+    background-color: #af7ac5;
+}
+
+
+/* Log de Mensagens */
+.message-log-container {
+    background-color: var(--bg-dark);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--panel-bg);
 }
 
 #messageLog {
     list-style: none;
     padding: 0;
-    max-height: 150px;
+    max-height: 120px;
     overflow-y: auto;
-    background-color: #26323f; /* Fundo um pouco mais escuro */
-    padding: 10px;
+    background-color: #1a1a2e;
+    padding: 8px;
     border-radius: 5px;
-    border: 1px solid #5d6d7e;
+    border: 1px solid #3a3a5a;
 }
 
 #messageLog li {
-    margin-bottom: 5px;
-    font-size: 0.8em;
+    margin-bottom: 4px;
+    font-size: 0.75em;
     line-height: 1.3;
     word-wrap: break-word;
 }
 
 .message-success { color: var(--accent-green); }
-.message-warning { color: var(--accent-orange); }
+.message-warning { color: var(--accent-yellow); }
 .message-error { color: var(--accent-red); }
-.message-info { color: var(--text-color); }
+.message-info { color: var(--text-light); }
 .message-game-event { color: var(--accent-yellow); font-weight: bold; }
 
 
@@ -286,20 +232,20 @@ button:disabled {
 
 .game-over-screen h2 {
     color: var(--accent-red);
-    font-size: 3em;
+    font-size: 2.8em;
     margin-bottom: 20px;
     text-shadow: 0 0 10px var(--accent-red);
 }
 
 .game-over-screen p {
-    font-size: 1.1em;
+    font-size: 1em;
     margin-bottom: 25px;
 }
 
 .game-over-screen button {
     background-color: var(--accent-red);
-    padding: 15px 30px;
-    font-size: 1.1em;
+    padding: 12px 25px;
+    font-size: 1em;
     box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
 }
 
@@ -307,37 +253,16 @@ button:disabled {
     background-color: #c0392b;
 }
 
-/* Responsividade Básica */
-@media (max-width: 768px) {
-    .main-game-area {
-        flex-direction: column;
-        align-items: center;
-    }
-    .actions, .base-elements {
-        width: 100%;
-        max-width: 450px;
-    }
-    .status-panel {
-        flex-direction: column;
-        gap: 8px;
-    }
-    .status-panel p {
-        margin: 0;
-    }
+/* Responsividade */
+@media (max-width: 480px) {
     .game-container {
         padding: 15px;
+        gap: 15px;
     }
-}
-
-@media (max-width: 480px) {
     h1 { font-size: 1.5em; }
-    h2, h3 { font-size: 1em; }
-    .status-panel p { font-size: 0.9em; }
-    button { padding: 10px 12px; font-size: 0.8em; }
-    .element-box { min-width: 120px; }
-    .weapon { height: 90px; }
-    .weapon img { width: 40px; height: 40px; }
-    #messageLog li { font-size: 0.7em; }
+    .header-status p, .threat-area p { font-size: 0.8em; }
+    .big-button { font-size: 1.2em; padding: 15px 20px; }
+    .upgrade-button { font-size: 0.7em; padding: 8px 10px; }
+    #messageLog li { font-size: 0.65em; }
     .game-over-screen h2 { font-size: 2em; }
-    .game-over-screen button { padding: 10px 20px; font-size: 1em; }
-           }
+                                 }
