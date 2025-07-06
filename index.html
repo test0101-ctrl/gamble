@@ -3,64 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Last Survivor: O Gerador</title>
+    <title>Gerador do Apocalipse!</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="game-container">
-        <h1>Last Survivor: O Gerador</h1>
+        <h1>Gerador do Apocalipse!</h1>
 
-        <div class="status-panel">
+        <div class="header-status">
             <p>Dia: <span id="gameDay">1</span></p>
-            <p>Gerador: <span id="generatorHealth">100%</span></p>
-            <p>Energia: <span id="generatorPower">100%</span></p>
-            <p>Recursos (Metal): <span id="resources">0</span></p>
+            <p>Gerador: <span id="generatorHealth" class="status-value">100%</span></p>
+            <p>Metal: <span id="metalResources" class="status-value">0</span></p>
         </div>
 
-        <div class="main-game-area">
-            <div class="actions">
-                <h2>Ações</h2>
-                <button id="mineButton">Minar Metal (Rápido)</button>
-                <button id="collectFuelButton">Coletar Combustível</button>
+        <div class="main-action-area">
+            <button id="mineButton" class="big-button">CLICAR PARA MINAR METAL</button>
+            <p class="mine-rate">Produção por Clique: <span id="clickProduction">1</span></p>
+            <p class="idle-rate">Produção Automática: <span id="idleProduction">0</span>/seg</p>
+        </div>
 
-                <h3>Construções & Reparos</h3>
-                <button id="upgradeDomeButton">Construir Cúpula (100 Metal)</button>
-                <button id="addWeaponButton">Construir Arma (50 Metal)</button>
-                <button id="repairDomeButton" disabled>Reparar Cúpula (20 Metal)</button>
-                <button id="repairWeaponsButton" disabled>Reparar Armas (10 Metal/arma)</button>
-                <button id="fuelGeneratorButton" disabled>Abastecer Gerador (1 Combustível)</button>
-            </div>
+        <div class="upgrade-area">
+            <h2>Melhorias</h2>
+            <button id="upgradeClickButton" class="upgrade-button">Melhorar Clique (10 Metal)</button>
+            <button id="buyDroneButton" class="upgrade-button">Comprar Drone (50 Metal)</button>
+            <button id="addTurretButton" class="upgrade-button">Adicionar Torreta (100 Metal)</button>
+            <button id="repairGeneratorButton" class="upgrade-button repair-button" disabled>Reparar Gerador (50 Metal)</button>
+        </div>
 
-            <div class="base-elements">
-                <div class="element-box">
-                    <h3>Gerador</h3>
-                    <img src="images/generator_ok.png" alt="Gerador" id="generatorImage" class="game-object">
-                    <p>Estado: <span id="generatorStatus">Normal</span></p>
-                </div>
-                <div class="element-box">
-                    <h3>Cúpula</h3>
-                    <img src="images/dome_lvl0.png" alt="Cúpula" id="domeImage" class="game-object">
-                    <p>Status: <span id="domeStatus">Nenhuma</span></p>
-                </div>
-                <div class="element-box weapons-area">
-                    <h3>Defesas (Armas)</h3>
-                    <div id="weaponsContainer" class="weapons-grid">
-                        </div>
-                </div>
-            </div>
+        <div class="threat-area">
+            <h2>Ameaças</h2>
+            <p>Próximo Ataque em: <span id="nextAttackIn">--</span>s</p>
+            <p>Dano no Ataque: <span id="attackDamage">10</span></p>
         </div>
 
         <div class="message-log-container">
-            <h2>Registro de Eventos</h2>
+            <h2>Registro</h2>
             <ul id="messageLog">
                 </ul>
         </div>
 
         <div id="gameOverScreen" class="game-over-screen">
             <h2>FIM DE JOGO!</h2>
-            <p>Seu gerador foi destruído. A Terra não perdoa.</p>
-            <button id="restartButton">Reiniciar Aventura</button>
+            <p>Seu gerador foi destruído pelos mutantes.</p>
+            <button id="restartButton">Reiniciar</button>
         </div>
 
     </div>
