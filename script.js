@@ -1,433 +1,467 @@
-// --- Variáveis de Jogo (Foco RPG de Sobrevivência) ---
+// --- Variáveis de Jogo (The Vault: Diários da Sobrevivência) ---
 const gameState = {
-    generatorHealth: 100,
-    generatorPower: 100,
-    resources: { // Recusos essenciais
-        metal: 0,
-        fuel: 0
-    },
     gameDay: 1,
-    isDay: true, // Para o ciclo visual dia/noite
-    domeLevel: 0, // 0 = sem cúpula, 1 = cúpula construída
-    weapons: [], // Array de objetos de arma: { id: 1, broken: false }
-    
-    // Intervalos de jogo
-    gameLoopInterval: null, // Loop principal
-    powerConsumptionInterval: null, // Consumo de energia
-    monsterAttackInterval: null, // Ataques de monstro
-    dayNightCycleInterval: null, // Ciclo dia/noite
-
     gameOver: false,
 
-    // Configurações e Escalabilidade
-    mineAmount: { metal: 5, fuel: 2 }, // Recursos por ação de mineração
-    monsterBaseDamage: 15,
-    monsterHealthPool: 60, // "Vida" total dos monstros por ataque
-    monsterAttackChance: 0.2, // Chance base de ataque a cada 'tick' de 20s
-    domeProtection: 0.5, // Cúpula reduz 50% do dano
-    weaponDamage: 20, // Dano de cada arma por ataque
-    weaponBreakChance: 0.25, // Chance de uma arma quebrar
-    generatorFuelConsumption: 1, // Consumo de combustível por tick
-    powerFromFuel: 25, // Energia restaurada por unidade de combustível
+    // Recursos
+    resources: {
+        food: 50,
+        water: 50,
+        scrap: 0, // Sucata: recurso principal de construção
+        energy: 0 // Produzida pelo gerador
+    },
+    
+    // Abrigo
+    population: 3, // Começa com 3 sobreviventes
+    maxPopulation: 5, // Limite inicial do abrigo
+    shelterMoral: 100, // Moral da população (0-100)
+    generatorHealth: 100, // Saúde do gerador
+    generatorLevel: 1, // Nível do gerador, afeta produção de energia
 
+    // Sobreviventes
+    survivors: [], // Array de objetos { id: 1, name: 'Nome', skill: 'Minerador', status: 'Livre'/'Explorando'/'Doente' }
+    nextSurvivorId: 1,
+
+    // Expedições
+    expedition: {
+        active: false,
+        survivorId: null,
+        daysRemaining: 0,
+        currentLocation: 'Ruínas Próximas'
+    },
+
+    // Produção
+    baseFoodConsumption: 2, // Comida por sobrevivente por dia
+    baseWaterConsumption: 2, // Água por sobrevivente por dia
+    foodProduction: 0, // Produção por hortas
+    waterProduction: 0, // Produção por purificadores
+    energyProductionPerLevel: 5, // Energia base por nível de gerador
+
+    // Custos e Efeitos
     costs: {
-        buildDome: { metal: 100 },
-        addWeapon: { metal: 50 },
-        repairDome: { metal: 20 },
-        repairWeapon: { metal: 10 }
-    }
+        expandShelter: { scrap: 100, populationIncrease: 2 },
+        buildFarm: { scrap: 50, foodIncrease: 5 },
+        buildWaterPurifier: { scrap: 50, waterIncrease: 5 },
+        upgradeGenerator: { scrap: 75, energyIncrease: 5 },
+        repairGenerator: { scrap: 20, healthRestore: 20 }
+    },
+
+    // Eventos e Dificuldade
+    eventChance: 0.1, // Chance de um evento aleatório no final do dia
+    expeditionRisk: 0.3, // Risco base de um evento ruim na expedição
+    attackChance: 0.05 // Chance de ataque direto ao gerador
 };
 
-// --- Referências de Elementos do DOM ---
+// --- Referências do DOM ---
+const gameDaySpan = document.getElementById('gameDay');
+const populationSpan = document.getElementById('population');
+const maxPopulationSpan = document.getElementById('maxPopulation');
+const shelterMoralSpan = document.getElementById('shelterMoral');
 const generatorHealthSpan = document.getElementById('generatorHealth');
 const generatorHealthBar = document.getElementById('generatorHealthBar');
-const generatorPowerSpan = document.getElementById('generatorPower');
-const generatorPowerBar = document.getElementById('generatorPowerBar');
-const metalResourcesSpan = document.getElementById('metalResources');
-const fuelResourcesSpan = document.getElementById('fuelResources');
-const gameDaySpan = document.getElementById('gameDay');
 
-const mineMetalButton = document.getElementById('mineMetalButton');
-const collectFuelButton = document.getElementById('collectFuelButton');
-const repairDomeButton = document.getElementById('repairDomeButton');
-const repairWeaponsButton = document.getElementById('repairWeaponsButton');
-const upgradeDomeButton = document.getElementById('upgradeDomeButton');
-const addWeaponButton = document.getElementById('addWeaponButton');
-const fuelGeneratorButton = document.getElementById('fuelGeneratorButton');
+const foodResourcesSpan = document.getElementById('foodResources');
+const waterResourcesSpan = document.getElementById('waterResources');
+const scrapResourcesSpan = document.getElementById('scrapResources');
+const energyResourcesSpan = document.getElementById('energyResources');
 
-const messageLog = document.getElementById('messageLog');
+const survivorsListDiv = document.getElementById('survivorsList');
+const currentSurvivorsCountSpan = document.getElementById('currentSurvivorsCount');
+
+const expandShelterButton = document.getElementById('expandShelterButton');
+const buildFarmButton = document.getElementById('buildFarmButton');
+const buildWaterPurifierButton = document.getElementById('buildWaterPurifierButton');
+const upgradeGeneratorButton = document.getElementById('upgradeGeneratorButton');
+const repairGeneratorButton = document.getElementById('repairGeneratorButton');
+
+const sendExpeditionButton = document.getElementById('sendExpeditionButton');
+const expeditionStatusDiv = document.getElementById('expeditionStatus');
+const eventLog = document.getElementById('eventLog');
 const gameOverScreen = document.getElementById('gameOverScreen');
 const restartButton = document.getElementById('restartButton');
-const weaponsContainer = document.getElementById('weaponsContainer');
-const generatorImage = document.getElementById('generatorImage');
-const domeImage = document.getElementById('domeImage');
-const generatorStatus = document.getElementById('generatorStatus');
-const domeStatus = document.getElementById('domeStatus');
-const skyElement = document.querySelector('.sky');
 
 
 // --- Funções de Utilitário e UI ---
 function updateUI() {
-    // Atualizar barras e textos de status do gerador
+    gameDaySpan.textContent = gameState.gameDay;
+    populationSpan.textContent = gameState.population;
+    maxPopulationSpan.textContent = gameState.maxPopulation;
+    
+    // Moral
+    shelterMoralSpan.textContent = `${gameState.shelterMoral}%`;
+    if (gameState.shelterMoral <= 25) { shelterMoralSpan.style.color = var('--accent-negative'); }
+    else if (gameState.shelterMoral <= 60) { shelterMoralSpan.style.color = var('--accent-warning'); }
+    else { shelterMoralSpan.style.color = var('--accent-positive'); }
+
+    // Gerador Saúde
     generatorHealthSpan.textContent = `${gameState.generatorHealth}%`;
     generatorHealthBar.style.width = `${gameState.generatorHealth}%`;
-    generatorPowerSpan.textContent = `${gameState.generatorPower}%`;
-    generatorPowerBar.style.width = `${gameState.generatorPower}%`;
+    if (gameState.generatorHealth <= 25) { generatorHealthBar.style.backgroundColor = 'var(--accent-negative)'; }
+    else if (gameState.generatorHealth <= 60) { generatorHealthBar.style.backgroundColor = 'var(--accent-warning)'; }
+    else { generatorHealthBar.style.backgroundColor = 'var(--accent-positive)'; }
 
-    if (gameState.generatorHealth <= 25) {
-        generatorHealthBar.style.backgroundColor = 'var(--accent-red)';
-        generatorStatus.textContent = 'CRÍTICO!';
-        generatorStatus.style.color = 'var(--accent-red)';
-        generatorImage.src = 'images/generator_critical.png';
-    } else if (gameState.generatorHealth <= 60) {
-        generatorHealthBar.style.backgroundColor = 'var(--accent-orange)';
-        generatorStatus.textContent = 'DANIFICADO';
-        generatorStatus.style.color = 'var(--accent-orange)';
-        generatorImage.src = 'images/generator_damaged.png';
+    // Recursos
+    foodResourcesSpan.textContent = gameState.resources.food;
+    waterResourcesSpan.textContent = gameState.resources.water;
+    scrapResourcesSpan.textContent = gameState.resources.scrap;
+    energyResourcesSpan.textContent = gameState.resources.energy;
+
+    // Botões de Construção
+    expandShelterButton.disabled = gameState.gameOver || gameState.resources.scrap < gameState.costs.expandShelter.scrap;
+    buildFarmButton.disabled = gameState.gameOver || gameState.resources.scrap < gameState.costs.buildFarm.scrap;
+    buildWaterPurifierButton.disabled = gameState.gameOver || gameState.resources.scrap < gameState.costs.buildWaterPurifier.scrap;
+    upgradeGeneratorButton.disabled = gameState.gameOver || gameState.resources.scrap < gameState.costs.upgradeGenerator.scrap;
+    repairGeneratorButton.disabled = gameState.gameOver || gameState.resources.scrap < gameState.costs.repairGenerator.scrap || gameState.generatorHealth === 100;
+
+    // Botão de Expedição
+    sendExpeditionButton.disabled = gameState.gameOver || gameState.expedition.active || gameState.survivors.filter(s => s.status === 'Livre').length === 0;
+
+    // Atualizar status da Expedição
+    if (gameState.expedition.active) {
+        expeditionStatusDiv.textContent = `Expedição para ${gameState.expedition.currentLocation} ativa. Retorna em ${gameState.expedition.daysRemaining} dias.`;
+        expeditionStatusDiv.classList.add('active');
     } else {
-        generatorHealthBar.style.backgroundColor = 'var(--accent-green)';
-        generatorStatus.textContent = 'NORMAL';
-        generatorStatus.style.color = 'var(--accent-green)';
-        generatorImage.src = 'images/generator_ok.png';
+        expeditionStatusDiv.textContent = 'Nenhuma expedição ativa.';
+        expeditionStatusDiv.classList.remove('active');
     }
 
-    if (gameState.generatorPower <= 20) {
-        generatorPowerBar.style.backgroundColor = 'var(--accent-red)';
-    } else if (gameState.generatorPower <= 50) {
-        generatorPowerBar.style.backgroundColor = 'var(--accent-orange)';
-    } else {
-        generatorPowerBar.style.backgroundColor = 'var(--accent-green)';
-    }
-
-    // Atualizar recursos e dia
-    metalResourcesSpan.textContent = gameState.resources.metal;
-    fuelResourcesSpan.textContent = gameState.resources.fuel;
-    gameDaySpan.textContent = gameState.gameDay;
-
-    // Habilitar/Desabilitar botões de ação com base em recursos e estado
-    mineMetalButton.disabled = gameState.gameOver;
-    collectFuelButton.disabled = gameState.gameOver;
-
-    upgradeDomeButton.disabled = gameState.gameOver || gameState.domeLevel > 0 ||
-                                 gameState.resources.metal < gameState.costs.buildDome.metal;
-
-    addWeaponButton.disabled = gameState.gameOver ||
-                               gameState.resources.metal < gameState.costs.addWeapon.metal;
-
-    // Habilitar reparos se houver dano ou armas quebradas E recursos
-    repairDomeButton.disabled = gameState.gameOver || gameState.domeLevel === 0 ||
-                                 gameState.resources.metal < gameState.costs.repairDome.metal;
-    
-    const brokenWeapons = gameState.weapons.filter(w => w.broken).length;
-    repairWeaponsButton.disabled = gameState.gameOver || brokenWeapons === 0 ||
-                                    gameState.resources.metal < (brokenWeapons * gameState.costs.repairWeapon.metal);
-
-    fuelGeneratorButton.disabled = gameState.gameOver || gameState.resources.fuel < 1 || gameState.generatorPower >= 100;
-
-    // Atualizar visual da cúpula
-    if (gameState.domeLevel === 0) {
-        domeImage.src = 'images/dome_lvl0.png';
-        domeStatus.textContent = 'Nenhuma';
-        domeStatus.style.color = 'var(--accent-red)';
-    } else if (gameState.domeLevel === 1) {
-        domeImage.src = 'images/dome_lvl1.png';
-        domeStatus.textContent = 'Ativa';
-        domeStatus.style.color = 'var(--accent-green)';
-    }
-
-    renderWeapons(); // Renderiza o estado das armas
+    renderSurvivors(); // Renderiza os cards de sobreviventes
 }
 
-function logMessage(message, type = 'info') {
+function logEvent(message, type = 'log-info') {
     const li = document.createElement('li');
     li.textContent = `[Dia ${gameState.gameDay}] ${message}`;
-    li.classList.add(`message-${type}`);
-    messageLog.prepend(li); // Adiciona no início (mais recente no topo)
-    if (messageLog.children.length > 25) { // Limita o número de mensagens
-        messageLog.removeChild(messageLog.lastChild);
+    li.classList.add(type);
+    eventLog.prepend(li); // Adiciona no topo
+    if (eventLog.children.length > 30) {
+        eventLog.removeChild(eventLog.lastChild);
     }
 }
 
 function gameOver() {
     gameState.gameOver = true;
     clearInterval(gameState.gameLoopInterval);
-    clearInterval(gameState.powerConsumptionInterval);
-    clearInterval(gameState.monsterAttackInterval);
-    clearInterval(gameState.dayNightCycleInterval);
     gameOverScreen.style.display = 'flex';
-    logMessage("GAME OVER! Seu gerador foi destruído pelos mutantes. A sua jornada termina aqui.", "error");
+    logEvent("GAME OVER! Seu abrigo não sobreviveu. O desespero tomou conta.", "log-error");
 }
 
-function takeDamage(target, amount) {
+function takeDamage(amount) {
     if (gameState.gameOver) return;
-
-    if (target === 'generator') {
-        gameState.generatorHealth -= amount;
-        if (gameState.generatorHealth <= 0) {
-            gameState.generatorHealth = 0;
-            gameOver();
-        }
-        logMessage(`O gerador sofreu ${amount} de dano! Saúde: ${gameState.generatorHealth}%`, "error");
+    gameState.generatorHealth -= amount;
+    if (gameState.generatorHealth <= 0) {
+        gameState.generatorHealth = 0;
+        gameOver();
     }
+    logEvent(`O Gerador sofreu ${amount} de dano! Saúde: ${gameState.generatorHealth}%`, "log-error");
     updateUI();
 }
 
-// --- Funções de Lógica do Jogo ---
+// --- Funções de Gerenciamento do Abrigo ---
 
 function startGame() {
     // Resetar estado do jogo
-    gameState.generatorHealth = 100;
-    gameState.generatorPower = 100;
-    gameState.resources = { metal: 0, fuel: 0 };
     gameState.gameDay = 1;
-    gameState.isDay = true;
-    gameState.domeLevel = 0;
-    gameState.weapons = [];
     gameState.gameOver = false;
-    
-    // Resetar dificuldade/escalonamento
-    gameState.monsterHealthPool = 60;
-    gameState.monsterBaseDamage = 15;
-    gameState.monsterAttackChance = 0.2;
+    gameState.resources = { food: 50, water: 50, scrap: 0, energy: 0 };
+    gameState.population = 3;
+    gameState.maxPopulation = 5;
+    gameState.shelterMoral = 100;
+    gameState.generatorHealth = 100;
+    gameState.generatorLevel = 1;
+    gameState.survivors = [];
+    gameState.nextSurvivorId = 1;
+    gameState.expedition = { active: false, survivorId: null, daysRemaining: 0, currentLocation: '' };
+    gameState.foodProduction = 0;
+    gameState.waterProduction = 0;
+
+    // Custos voltam ao padrão (se tivessem escalado)
+    gameState.costs.expandShelter.scrap = 100;
+    gameState.costs.buildFarm.scrap = 50;
+    gameState.costs.buildWaterPurifier.scrap = 50;
+    gameState.costs.upgradeGenerator.scrap = 75;
+    gameState.costs.repairGenerator.scrap = 20;
 
     gameOverScreen.style.display = 'none';
+    eventLog.innerHTML = ''; // Limpa o log
 
-    // Limpar intervalos antigos
     clearInterval(gameState.gameLoopInterval);
-    clearInterval(gameState.powerConsumptionInterval);
-    clearInterval(gameState.monsterAttackInterval);
-    clearInterval(gameState.dayNightCycleInterval);
+    gameState.gameLoopInterval = setInterval(dayCycle, 5000); // Um dia a cada 5 segundos
 
-    // Iniciar novos intervalos
-    gameState.gameLoopInterval = setInterval(gameLoop, 1000); // Principal tick do jogo (1 segundo)
-    gameState.powerConsumptionInterval = setInterval(consumePower, 5000); // Consome energia a cada 5 segundos
-    gameState.monsterAttackInterval = setInterval(tryTriggerMonsterAttack, 20000); // Tenta ataque de monstro a cada 20 segundos
-    gameState.dayNightCycleInterval = setInterval(advanceDay, 60000); // Avança um dia a cada 60 segundos (1 minuto)
+    // Adicionar sobreviventes iniciais
+    addSurvivor('Maria', 'Coleto');
+    addSurvivor('João', 'Construtor');
+    addSurvivor('Ana', 'Médica');
 
-    // Estado inicial do céu
-    skyElement.classList.remove('night');
-    skyElement.classList.add('day'); 
-
-    logMessage("Bem-vindo, sobrevivente. O futuro da humanidade depende deste gerador.", "game-event");
+    logEvent("Bem-vindo(a) ao Vault. Mantenha a esperança viva!", "log-game-event");
     updateUI();
 }
 
-function gameLoop() {
-    // Lógica que acontece a cada segundo (opcional, para complexidade futura)
-    // Por enquanto, apenas atualiza a UI para garantir que o tempo de ataque seja visível.
-    updateUI();
-}
+function dayCycle() {
+    if (gameState.gameOver) return;
 
-function advanceDay() {
     gameState.gameDay++;
-    logMessage(`O ${gameState.gameDay}º dia começa. O perigo espreita...`, "game-event");
+    logEvent(`--- Início do Dia ${gameState.gameDay} ---`, "log-game-event");
+
+    // 1. Consumo de Recursos
+    const foodConsumed = gameState.population * gameState.baseFoodConsumption;
+    const waterConsumed = gameState.population * gameState.baseWaterConsumption;
+
+    gameState.resources.food -= foodConsumed;
+    gameState.resources.water -= waterConsumed;
+
+    // Penalidades por falta de recursos
+    if (gameState.resources.food < 0) {
+        gameState.resources.food = 0;
+        gameState.shelterMoral = Math.max(0, gameState.shelterMoral - 10);
+        logEvent("Falta de comida! A moral está caindo.", "log-warning");
+    }
+    if (gameState.resources.water < 0) {
+        gameState.resources.water = 0;
+        gameState.shelterMoral = Math.max(0, gameState.shelterMoral - 10);
+        logEvent("Falta de água! A moral está caindo.", "log-warning");
+    }
+
+    // 2. Produção de Recursos (Hortas, Purificadores, Gerador)
+    gameState.resources.food += gameState.foodProduction;
+    gameState.resources.water += gameState.waterProduction;
+    gameState.resources.energy += gameState.generatorLevel * gameState.energyProductionPerLevel;
+
+    // 3. Gerenciamento do Gerador (Consumo de Energia)
+    // O gerador consome energia para manter o abrigo.
+    const energyConsumption = gameState.population * 2; // Ex: 2 energia por pessoa
+    gameState.resources.energy -= energyConsumption;
+    if (gameState.resources.energy < 0) {
+        gameState.resources.energy = 0;
+        takeDamage(Math.ceil(energyConsumption / 5)); // Dano proporcional à falta de energia
+        logEvent("Gerador sem energia suficiente! Sofrendo sobrecarga.", "log-error");
+        gameState.shelterMoral = Math.max(0, gameState.shelterMoral - 5);
+    }
+
+    // 4. Checar Expedição
+    if (gameState.expedition.active) {
+        gameState.expedition.daysRemaining--;
+        if (gameState.expedition.daysRemaining <= 0) {
+            resolveExpedition();
+        }
+    }
+
+    // 5. Eventos Aleatórios
+    if (Math.random() < gameState.eventChance) {
+        triggerRandomEvent();
+    }
     
-    // Escalonamento da dificuldade
-    gameState.monsterHealthPool += 10; // Monstros ficam mais resistentes
-    gameState.monsterBaseDamage += 2; // Monstros causam mais dano
-    gameState.monsterAttackChance = Math.min(0.8, gameState.monsterAttackChance + 0.02); // Aumenta chance de ataque, com limite
-
-    // Alternar visual do dia/noite (não afeta jogabilidade diretamente aqui)
-    gameState.isDay = !gameState.isDay;
-    if (gameState.isDay) {
-        skyElement.classList.remove('night');
-        skyElement.classList.add('day');
-    } else {
-        skyElement.classList.remove('day');
-        skyElement.classList.add('night');
+    // 6. Impacto da Moral
+    if (gameState.shelterMoral <= 20 && Math.random() < 0.1) {
+        if (gameState.population > 1) {
+            removeRandomSurvivor("Deserção por baixa moral.");
+        } else {
+            gameOver(); // Se for o último e moral muito baixa, é o fim
+        }
+    } else if (gameState.shelterMoral >= 80 && gameState.population < gameState.maxPopulation && Math.random() < 0.05) {
+        // Chance de um novo sobrevivente aparecer se a moral estiver alta
+        addNewSurvivor();
     }
 
     updateUI();
+
+    // Condição de Game Over adicional: Sem sobreviventes
+    if (gameState.population <= 0) {
+        gameOver();
+    }
 }
 
-function mineResource(type) {
-    if (gameState.gameOver) return;
-
-    let minedAmount = gameState.mineAmount[type] + Math.floor(Math.random() * 3); // Pequena variação
-    gameState.resources[type] += minedAmount;
-    logMessage(`Você minerou ${minedAmount} de ${type === 'metal' ? 'Metal' : 'Combustível'}. Total: ${gameState.resources[type]}.`, "success");
-
-    // Chance de ataque ao minerar
-    if (Math.random() < gameState.monsterAttackChance * 0.8) { // Ligeiramente menor chance que ataque periódico
-        logMessage("A mineração atraiu a atenção de mutantes! Prepare-se!", "warning");
-        handleMonsterAttack();
+function addSurvivor(name, skill) {
+    if (gameState.population >= gameState.maxPopulation) {
+        logEvent("Abrigo lotado! Não há espaço para mais sobreviventes.", "log-warning");
+        return;
     }
+    const newSurvivor = {
+        id: gameState.nextSurvivorId++,
+        name: name,
+        skill: skill, // Ex: 'Construtor', 'Minerador', 'Médico', 'Combate'
+        status: 'Livre',
+        hunger: 0, // 0-10, 10 é faminto
+        thirst: 0 // 0-10, 10 é desidratado
+    };
+    gameState.survivors.push(newSurvivor);
+    gameState.population++;
+    logEvent(`${newSurvivor.name} (${newSurvivor.skill}) juntou-se ao abrigo!`, "log-success");
     updateUI();
 }
 
-function consumePower() {
-    if (gameState.gameOver) return;
-
-    let consumption = gameState.generatorFuelConsumption; // Consumo base
-    if (gameState.domeLevel > 0) consumption += 0.5; // Cúpula consome mais
-    consumption += gameState.weapons.length * 0.2; // Armas também consomem
-
-    // Para evitar frações de combustível, arredondamos o consumo
-    consumption = Math.max(1, Math.ceil(consumption)); 
-
-    if (gameState.resources.fuel >= consumption) {
-        gameState.resources.fuel -= consumption;
-        gameState.generatorPower = Math.min(100, gameState.generatorPower + (consumption * 2)); // Combustível gera energia
-    } else {
-        // Se sem combustível, o gerador perde energia e pode sofrer dano
-        gameState.generatorPower -= (consumption * 5); 
-        if (gameState.generatorPower <= 0) {
-            gameState.generatorPower = 0;
-            takeDamage('generator', 10); // Gerador sofre dano se sem energia
-            logMessage("O gerador está sem energia! Sofrendo danos críticos!", "error");
-        } else if (gameState.generatorPower < 30) {
-            logMessage("A energia do gerador está criticamente baixa! Abasteça-o!", "warning");
+function removeSurvivor(survivorId, reason) {
+    const index = gameState.survivors.findIndex(s => s.id === survivorId);
+    if (index > -1) {
+        const removed = gameState.survivors.splice(index, 1);
+        gameState.population--;
+        logEvent(`${removed[0].name} ${reason}`, "log-error");
+        updateUI();
+        if (gameState.population <= 0) {
+            gameOver();
         }
     }
-    updateUI();
 }
 
-function fuelGenerator() {
-    if (gameState.gameOver) return;
-
-    const fuelToUse = 10; // Custo de combustível por abastecimento
-    if (gameState.resources.fuel >= fuelToUse && gameState.generatorPower < 100) {
-        gameState.resources.fuel -= fuelToUse;
-        gameState.generatorPower = Math.min(100, gameState.generatorPower + gameState.powerFromFuel);
-        logMessage(`Gerador abastecido com ${fuelToUse} de Combustível! Energia: ${gameState.generatorPower}%`, "info");
-    } else if (gameState.generatorPower >= 100) {
-        logMessage("A energia do gerador já está no máximo.", "info");
-    } else {
-        logMessage(`Você precisa de ${fuelToUse} Combustível para abastecer.`, "warning");
-    }
-    updateUI();
+function addNewSurvivor() {
+    const names = ['Ethan', 'Sophia', 'Liam', 'Olivia', 'Noah', 'Ava'];
+    const skills = ['Coleto', 'Construtor', 'Médico', 'Combate', 'Engenheiro'];
+    const randomName = names[Math.floor(Math.random() * names.length)];
+    const randomSkill = skills[Math.floor(Math.random() * skills.length)];
+    addSurvivor(randomName, randomSkill);
+    logEvent(`Um novo sobrevivente, ${randomName}, apareceu nas portas do abrigo!`, "log-game-event");
 }
 
-function tryTriggerMonsterAttack() {
-    if (gameState.gameOver) return;
-    // Ataque periódico principal
-    if (Math.random() < gameState.monsterAttackChance) {
-        logMessage("UM ENXAME DE MUTANTES ESTÁ ATACANDO SUA BASE!", "game-event");
-        handleMonsterAttack();
-    }
-}
-
-function handleMonsterAttack() {
-    let currentMonsterHealth = gameState.monsterHealthPool; // Vida dos mutantes para este ataque
-    let finalDamageToGenerator = gameState.monsterBaseDamage;
-
-    // Defesa das armas
-    let totalWeaponDamage = 0;
-    let activeWeapons = gameState.weapons.filter(w => !w.broken);
-    activeWeapons.forEach(weapon => {
-        totalWeaponDamage += gameState.weaponDamage;
-        // Chance da arma quebrar
-        if (Math.random() < gameState.weaponBreakChance) {
-            weapon.broken = true;
-            logMessage(`Uma de suas armas (ID ${weapon.id}) quebrou! Precisa de reparos.`, "warning");
-        }
+function renderSurvivors() {
+    survivorsListDiv.innerHTML = '';
+    currentSurvivorsCountSpan.textContent = gameState.survivors.length; // Atualiza contador real
+    gameState.survivors.forEach(s => {
+        const survivorCard = document.createElement('div');
+        survivorCard.classList.add('survivor-card');
+        if (s.status === 'Explorando') survivorCard.classList.add('on-expedition');
+        // Adicionar classes para fome/sede se implementado
+        
+        survivorCard.innerHTML = `
+            <img src="images/survivor_default.png" alt="${s.name}">
+            <p><strong>${s.name}</strong></p>
+            <p class="skill">${s.skill}</p>
+            <p class="status-text">Status: ${s.status}</p>
+        `;
+        survivorsListDiv.appendChild(survivorCard);
     });
-
-    currentMonsterHealth -= totalWeaponDamage;
-    logMessage(`Suas ${activeWeapons.length} armas causaram ${totalWeaponDamage} de dano aos mutantes!`, "info");
-
-    if (currentMonsterHealth <= 0) {
-        logMessage("Os mutantes foram derrotados! A base está segura.", "success");
-        return; // Monstros derrotados, gerador seguro
-    }
-
-    // Se mutantes sobreviveram, o gerador leva dano
-    // Aplica proteção da cúpula
-    if (gameState.domeLevel > 0) {
-        finalDamageToGenerator *= (1 - gameState.domeProtection);
-        logMessage(`A Cúpula de Proteção absorveu parte do impacto!`, "info");
-    }
-
-    takeDamage('generator', Math.round(finalDamageToGenerator));
-    logMessage("Os mutantes conseguiram romper as defesas e danificar o gerador!", "error");
 }
 
-function upgradeDome() {
-    const cost = gameState.costs.buildDome;
-    if (gameState.resources.metal >= cost.metal && gameState.domeLevel === 0) {
-        gameState.resources.metal -= cost.metal;
-        gameState.domeLevel = 1;
-        logMessage("Cúpula de Proteção construída! Sua base está muito mais segura.", "success");
-    } else if (gameState.domeLevel > 0) {
-        logMessage("Você já possui uma Cúpula de Proteção.", "info");
+// --- Funções de Construção ---
+function expandShelter() {
+    const cost = gameState.costs.expandShelter.scrap;
+    if (gameState.resources.scrap >= cost) {
+        gameState.resources.scrap -= cost;
+        gameState.maxPopulation += gameState.costs.expandShelter.populationIncrease;
+        gameState.costs.expandShelter.scrap = Math.floor(cost * 1.5); // Custo aumenta
+        expandShelterButton.textContent = `Expandir Abrigo (${gameState.costs.expandShelter.scrap} Sucata)`;
+        logEvent(`Abrigo expandido! Capacidade máxima: ${gameState.maxPopulation} pessoas.`, "log-success");
     } else {
-        logMessage(`Recursos insuficientes (precisa de ${cost.metal} Metal).`, "warning");
+        logEvent(`Não há sucata suficiente para expandir o abrigo (precisa de ${cost}).`, "log-warning");
     }
     updateUI();
 }
 
-function repairDome() {
-    const cost = gameState.costs.repairDome;
-    // Em um RPG, a cúpula teria saúde e você repararia, mas para simplificar,
-    // o botão de reparar cúpula existe para o jogador sentir que pode manter as defesas
-    if (gameState.domeLevel > 0 && gameState.resources.metal >= cost.metal) {
-        gameState.resources.metal -= cost.metal;
-        logMessage("Cúpula de Proteção reparada e restaurada à sua integridade total.", "success");
-    } else if (gameState.domeLevel === 0) {
-        logMessage("Não há Cúpula para reparar.", "warning");
+function buildFarm() {
+    const cost = gameState.costs.buildFarm.scrap;
+    if (gameState.resources.scrap >= cost) {
+        gameState.resources.scrap -= cost;
+        gameState.foodProduction += gameState.costs.buildFarm.foodIncrease;
+        gameState.costs.buildFarm.scrap = Math.floor(cost * 1.3);
+        buildFarmButton.textContent = `Construir Horta (${gameState.costs.buildFarm.scrap} Sucata)`;
+        logEvent(`Horta construída! Produção de comida aumentou para ${gameState.foodProduction}/dia.`, "log-success");
     } else {
-        logMessage(`Recursos insuficientes (precisa de ${cost.metal} Metal).`, "warning");
+        logEvent(`Não há sucata suficiente para construir uma horta (precisa de ${cost}).`, "log-warning");
     }
     updateUI();
 }
 
-let nextWeaponId = 1; // Para dar um ID único a cada arma
-function addWeapon() {
-    const cost = gameState.costs.addWeapon;
-    if (gameState.resources.metal >= cost.metal) {
-        gameState.resources.metal -= cost.metal;
-        gameState.weapons.push({ id: nextWeaponId++, broken: false });
-        logMessage(`Nova Arma Automática (ID ${nextWeaponId - 1}) adicionada às defesas!`, "success");
+function buildWaterPurifier() {
+    const cost = gameState.costs.buildWaterPurifier.scrap;
+    if (gameState.resources.scrap >= cost) {
+        gameState.resources.scrap -= cost;
+        gameState.waterProduction += gameState.costs.buildWaterPurifier.waterIncrease;
+        gameState.costs.buildWaterPurifier.scrap = Math.floor(cost * 1.3);
+        buildWaterPurifierButton.textContent = `Construir Purificador (${gameState.costs.buildWaterPurifier.scrap} Sucata)`;
+        logEvent(`Purificador de água construído! Produção de água aumentou para ${gameState.waterProduction}/dia.`, "log-success");
     } else {
-        logMessage(`Recursos insuficientes (precisa de ${cost.metal} Metal).`, "warning");
+        logEvent(`Não há sucata suficiente para construir um purificador (precisa de ${cost}).`, "log-warning");
     }
     updateUI();
 }
 
-function repairWeapons() {
-    const brokenWeapons = gameState.weapons.filter(w => w.broken);
-    if (brokenWeapons.length === 0) {
-        logMessage("Nenhuma arma quebrada para reparar.", "info");
+function upgradeGenerator() {
+    const cost = gameState.costs.upgradeGenerator.scrap;
+    if (gameState.resources.scrap >= cost) {
+        gameState.resources.scrap -= cost;
+        gameState.generatorLevel++;
+        gameState.costs.upgradeGenerator.scrap = Math.floor(cost * 1.8); // Aumenta bem o custo
+        upgradeGeneratorButton.textContent = `Melhorar Gerador (${gameState.costs.upgradeGenerator.scrap} Sucata)`;
+        logEvent(`Gerador melhorado para Nível ${gameState.generatorLevel}! Produção de energia aumentada.`, "log-success");
+    } else {
+        logEvent(`Não há sucata suficiente para melhorar o gerador (precisa de ${cost}).`, "log-warning");
+    }
+    updateUI();
+}
+
+function repairGenerator() {
+    const cost = gameState.costs.repairGenerator.scrap;
+    if (gameState.resources.scrap >= cost && gameState.generatorHealth < 100) {
+        gameState.resources.scrap -= cost;
+        gameState.generatorHealth = Math.min(100, gameState.generatorHealth + gameState.costs.repairGenerator.healthRestore);
+        logEvent(`Gerador reparado! Saúde: ${gameState.generatorHealth}%`, "log-success");
+    } else if (gameState.generatorHealth === 100) {
+        logEvent("Gerador já está com saúde máxima.", "log-info");
+    } else {
+        logEvent(`Não há sucata suficiente para reparar o gerador (precisa de ${cost}).`, "log-warning");
+    }
+    updateUI();
+}
+
+// --- Funções de Expedição ---
+function sendExpedition() {
+    if (gameState.expedition.active) {
+        logEvent("Já há uma expedição em andamento.", "log-warning");
         return;
     }
 
-    const totalCost = brokenWeapons.length * gameState.costs.repairWeapon.metal;
-    if (gameState.resources.metal >= totalCost) {
-        gameState.resources.metal -= totalCost;
-        brokenWeapons.forEach(w => w.broken = false);
-        logMessage(`Todas as ${brokenWeapons.length} armas quebradas foram reparadas!`, "success");
-    } else {
-        logMessage(`Recursos insuficientes para reparar todas as armas (precisa de ${totalCost} Metal).`, "warning");
+    const availableSurvivors = gameState.survivors.filter(s => s.status === 'Livre');
+    if (availableSurvivors.length === 0) {
+        logEvent("Nenhum sobrevivente disponível para expedição.", "log-warning");
+        return;
     }
+
+    // Escolhe um sobrevivente aleatório para a expedição
+    const chosenSurvivor = availableSurvivors[Math.floor(Math.random() * availableSurvivors.length)];
+    chosenSurvivor.status = 'Explorando';
+
+    const expeditionDuration = Math.floor(Math.random() * 3) + 2; // 2 a 4 dias
+    const locations = ['Ruínas da Cidade', 'Floresta Contaminada', 'Subterrâneos Desconhecidos'];
+    const chosenLocation = locations[Math.floor(Math.random() * locations.length)];
+
+    gameState.expedition = {
+        active: true,
+        survivorId: chosenSurvivor.id,
+        daysRemaining: expeditionDuration,
+        currentLocation: chosenLocation
+    };
+    logEvent(`${chosenSurvivor.name} partiu em expedição para ${chosenLocation}. Retornará em ${expeditionDuration} dias.`, "log-info");
     updateUI();
 }
 
-function renderWeapons() {
-    weaponsContainer.innerHTML = ''; // Limpa as armas existentes
-    gameState.weapons.forEach(weapon => {
-        const weaponDiv = document.createElement('div');
-        weaponDiv.classList.add('weapon');
-        if (weapon.broken) {
-            weaponDiv.classList.add('broken');
-        }
-        weaponDiv.innerHTML = `
-            <img src="images/${weapon.broken ? 'weapon_broken.png' : 'weapon_ok.png'}" alt="Weapon">
-            <p>Arma ${weapon.id}</p>
-            ${weapon.broken ? '<p class="status-broken">QUEBRADA</p>' : '<p class="status-ok">OPERACIONAL</p>'}
-        `;
-        weaponsContainer.appendChild(weaponDiv);
-    });
-}
+function resolveExpedition() {
+    const survivor = gameState.survivors.find(s => s.id === gameState.expedition.survivorId);
+    if (!survivor) { // Em caso de erro, só para garantir
+        logEvent("Erro: Sobrevivente da expedição não encontrado.", "log-error");
+        gameState.expedition.active = false;
+        updateUI();
+        return;
+    }
 
-// --- Event Listeners ---
-mineMetalButton.addEventListener('click', () => mineResource('metal'));
-collectFuelButton.addEventListener('click', () => mineResource('fuel'));
-upgradeDomeButton.addEventListener('click', upgradeDome);
-addWeaponButton.addEventListener('click', addWeapon);
-repairDomeButton.addEventListener('click', repairDome);
-repairWeaponsButton.addEventListener('click', repairWeapons);
-fuelGeneratorButton.addEventListener('click', fuelGenerator);
-restartButton.addEventListener('click', startGame);
+    survivor.status = 'Livre'; // Sobrevivente retorna ao abrigo
 
-// --- Inicialização do Jogo ---
-startGame();
+    // Eventos da expedição
+    const diceRoll = Math.random();
+    let foundScrap = Math.floor(Math.random() * 20) + 10; // 10-30 de sucata
+    let foundFood = Math.floor(Math.random() * 15) + 5; // 5-20 de comida
+    let foundWater = Math.floor(Math.random() * 15) + 5; // 5-20 de água
+
+    if (diceRoll < gameState.expeditionRisk) { // Evento ruim
+        const badEvents = [
+            () => { // Perde recursos
+                const lostScrap = Math.min(foundScrap, Math.floor(Math.random() * 10));
+                foundScrap -= lostScrap;
+                gameState.shelterMoral = Math.max(0, gameState.shelterMoral - 5);
+                logEvent(`${survivor.name} encontrou mutantes na expedição e perdeu ${lostScrap} Sucata.`, "log-warning");
+            },
+            () => { // Sobrevivente ferido
+                logEvent(`${survivor.name} foi ferido na expedição e agora está doente!`, "log-error");
+                // TODO: Implementar estado 'doente' para sobreviventes
+                gameState.shelterMoral = Math.max(0, gameState.shelterMoral - 10);
+            },
+            () => { // Ataque ao gerador (expedição atraiu atenção)
+                const damage = Math.floor(Math.random() * 10) + 5;
+       
